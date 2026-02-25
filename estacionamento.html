@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Painel Estacionamento</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 20px; font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .card { background: #1e293b; padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        h2 { margin-top: 0; color: #38bdf8; text-align: center; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #94a3b8; }
+        input { 
+            width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #334155; 
+            background: #0f172a; color: white; font-size: 1.2rem; box-sizing: border-box; 
+            text-transform: uppercase; text-align: center; font-weight: bold; letter-spacing: 1px;
+        }
+        input:focus { border-color: #38bdf8; outline: none; }
+        
+        .btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 12px; 
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; 
+            background: #38bdf8; color: #0f172a; text-transform: uppercase;
+            transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        .placa-input { letter-spacing: 3px; font-size: 1.5rem; }
+
+        .history { margin-top: 30px; width: 100%; max-width: 400px; }
+        .history-item { 
+            background: #334155; padding: 15px; border-radius: 10px; margin-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2><i class="fas fa-car"></i> Chamar Proprietário</h2>
+        
+        <div class="form-group">
+            <label>Modelo / Cor</label>
+            <input type="text" id="carModel" placeholder="Ex: Gol Prata">
+        </div>
+
+        <div class="form-group">
+            <label>Placa do Veículo</label>
+            <input type="text" id="carPlate" class="placa-input" placeholder="ABC-1234" maxlength="8">
+        </div>
+
+        <button class="btn" onclick="sendCarAlert()">📢 Enviar para Telão</button>
+    </div>
+
+    <div class="history" id="historyList">
+        <small style="color:#64748b; display:block; margin-bottom:10px;">Últimos chamados:</small>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI5S5ciZioheWabi0W0Ii_r0e3RsYm3iw",
+            authDomain: "cadastro-final-cc77f.firebaseapp.com",
+            databaseURL: "https://cadastro-final-cc77f-default-rtdb.firebaseio.com",
+            projectId: "cadastro-final-cc77f",
+            storageBucket: "cadastro-final-cc77f.firebasestorage.app",
+            messagingSenderId: "229086987694",
+            appId: "1:229086987694:web:52f1a32f4b1a9f5be2743f",
+            measurementId: "G-9F9WBCMH6Y"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        function sendCarAlert() {
+            const model = document.getElementById('carModel').value.toUpperCase();
+            let plate = document.getElementById('carPlate').value.toUpperCase();
+
+            if(!model || !plate) return alert("Preencha modelo e placa!");
+
+            const data = {
+                type: 'car', // Importante para o telão saber que é carro
+                model: model,
+                plate: plate,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            db.ref('estacionamento').push(data).then(() => {
+                alert("🚗 Enviado para o telão!");
+                addToHistory(model, plate);
+                document.getElementById('carModel').value = '';
+                document.getElementById('carPlate').value = '';
+            }).catch(e => alert("Erro ao enviar."));
+        }
+
+        function addToHistory(model, plate) {
+            const list = document.getElementById('historyList');
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `<span><b>${plate}</b> - ${model}</span> <i class="fas fa-check" style="color:#4ade80"></i>`;
+            list.prepend(div);
+        }
+
+        // Formata placa automaticamente
+        document.getElementById('carPlate').addEventListener('input', function (e) {
+            let x = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            if (x.length > 3) x = x.substring(0,3) + '-' + x.substring(3);
+            e.target.value = x;
+        });
+    </script>
+</body>
+</html>
