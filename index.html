@@ -1,530 +1,241 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escala Dízimos e Ofertas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Central de Sistemas | IBNV</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Central IBNV">
+    <meta name="mobile-web-app-capable" content="yes">
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
-            --bg-body: #F0F2F5;
-            --card-bg: #FFFFFF;
-            --primary: #4F46E5;
-            --text-main: #2D3748;
-            --grad-header: linear-gradient(135deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
-            --grad-sunday: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
-            --grad-thursday: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
-            --radius-lg: 24px;
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            padding-bottom: 60px;
-            background-image: radial-gradient(circle at 10% 20%, rgba(200, 80, 192, 0.05) 0%, transparent 20%), radial-gradient(circle at 90% 80%, rgba(65, 88, 208, 0.05) 0%, transparent 20%);
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            /* Padding superior ajustado para o notch do celular */
+            padding: env(safe-area-inset-top) 15px 40px 15px;
+            color: var(--text-color);
         }
 
-        /* HEADER */
-        .header {
-            background: var(--grad-header);
-            padding: 50px 20px 70px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             text-align: center;
-            border-radius: 0 0 40px 40px;
+        }
+
+        .header {
+            padding: 40px 0 20px 0;
             color: white;
-            box-shadow: 0 15px 30px -10px rgba(200, 80, 192, 0.4);
-            margin-bottom: -40px;
-            position: relative;
+            animation: fadeInDown 0.8s ease-out;
         }
 
-        .login-btn {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.4); color: white;
-            padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: 0.3s;
+        .header h1 {
+            font-weight: 600;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .header h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 5px; }
-        .header h2 { font-size: 1rem; opacity: 0.9; font-weight: 500; letter-spacing: 1px;}
+        .header p {
+            font-weight: 300;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
 
-        .container { max-width: 800px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 10; }
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 10px 0;
+        }
 
-        /* CARDS */
+        /* Estilização dos Cards como Botões de App */
         .card {
-            background: var(--card-bg); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08); border: 1px solid rgba(255,255,255,0.8); position: relative; overflow: hidden;
+            background: var(--card-bg);
+            padding: 30px 20px;
+            border-radius: 24px; /* Mais arredondado = mais moderno/app */
+            text-decoration: none;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            position: relative;
+            overflow: hidden;
         }
-        .card::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
-        .card.theme-domingo::after { background: var(--grad-sunday); }
-        .card.theme-quinta::after { background: var(--grad-thursday); }
-        .card.today { border: 2px solid #00C9A7; background: linear-gradient(to bottom, #ffffff, #f0fdf9); }
-        .card.today::before { content: 'HOJE'; position: absolute; top: 15px; right: 15px; background: #00C9A7; color: white; font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
-        .card.past { opacity: 0.6; filter: grayscale(1); }
 
-        .card-header-flex { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-        .date-display { width: 60px; height: 60px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; line-height: 1; }
-        .card.theme-domingo .date-display { background: rgba(255, 94, 98, 0.1); color: #FF5E62; }
-        .card.theme-quinta .date-display { background: rgba(47, 128, 237, 0.1); color: #2F80ED; }
-        .date-day { font-size: 1.4rem; font-family: 'Plus Jakarta Sans', sans-serif; }
-        .date-month { font-size: 0.7rem; text-transform: uppercase; margin-top: 2px; }
+        /* Feedback visual ao tocar (Mobile Tap Effect) */
+        .card:active {
+            transform: scale(0.96);
+            background: #fdfdfd;
+        }
 
-        .btn-edit-escala { background: #F59E0B; color: white; border: none; padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-left: auto; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2); }
-        .btn-edit-escala:hover { background: #D97706; }
+        .icon-box {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
 
-        /* ROLES */
-        .roles-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
-        .role-card { display: flex; align-items: center; padding: 12px; border-radius: 16px; background: #F7FAFC; border: 1px solid #EDF2F7; position: relative; }
-        .role-card.dirigente { background: #FFF8E1; border-color: #FFE082; }
-        
-        .role-icon { width: 45px; height: 45px; border-radius: 14px; margin-right: 12px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .role-icon img { width: 100%; height: 100%; object-fit: cover; }
-        .role-info h4 { font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; }
-        .role-info p { font-size: 1rem; font-weight: 600; color: var(--text-main); }
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
 
-        /* AVISOS */
-        .avisos-box { margin-top: 25px; border-top: 2px dashed #E2E8F0; padding-top: 15px; position: relative; }
-        .edit-avisos-btn { display: none; position: absolute; top: -15px; right: 0; background: var(--primary); color: white; font-size: 0.7rem; padding: 5px 10px; border-radius: 10px; border: none; cursor: pointer; }
+        .card p {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
 
-        .avisos-btn { width: 100%; padding: 12px; background: #EEF2FF; color: #4F46E5; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .avisos-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; background: #F8FAFC; border-radius: 0 0 12px 12px; }
-        .avisos-content.open { max-height: 800px; padding: 15px; border: 1px solid #E2E8F0; border-top: none; }
-        
-        .detail-row { padding: 10px 0; border-bottom: 1px solid #E2E8F0; font-size: 0.9rem; line-height: 1.4; display: flex; flex-direction: column; }
-        @media(min-width: 400px) { .detail-row { flex-direction: row; align-items: baseline; } }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-title { color: #4338CA; font-weight: 800; margin-right: 6px; text-transform: uppercase; font-size: 0.85rem; white-space: nowrap; }
-        .detail-text { color: #475569; }
+        .btn-acessar {
+            width: 100%; /* Ocupa tudo para facilitar o clique */
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: filter 0.2s;
+        }
 
-        /* MODAIS */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); z-index: 1000; display: none; align-items: center; justify-content: center; }
-        .modal { background: white; width: 90%; max-width: 500px; padding: 25px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-height: 85vh; overflow-y: auto; }
-        
-        .modal h3 { margin-bottom: 15px; color: var(--text-main); }
-        .modal input, .modal textarea, .modal select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; }
-        
-        .aviso-edit-row { background: #f9fafb; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e5e7eb; position: relative; }
-        .btn-remove-aviso { position: absolute; top: 10px; right: 10px; background: #fee2e2; color: #ef4444; border: none; width: 25px; height: 25px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
-        
-        .btn-add-aviso { width: 100%; padding: 12px; background: #ECFDF5; color: #059669; border: 1px dashed #10B981; border-radius: 12px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: 0.2s; }
+        /* --- CORES POR SETOR --- */
+        .estacionamento .icon-box { color: #e74c3c; }
+        .estacionamento .btn-acessar { background: #e74c3c; color: white; }
 
-        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
-        .btn-cancel { background: #f3f4f6; color: #666; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;}
-        .btn-confirm { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;}
-        .btn-delete { background: #fee2e2; color: #ef4444; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .infantil .icon-box { color: #f1c40f; }
+        .infantil .btn-acessar { background: #f1c40f; color: #333; }
 
-        /* FOOTER & CREDITS */
-        .footer { text-align: center; margin-top: 50px; padding: 20px; opacity: 0.9; }
-        .footer p { margin-bottom: 5px; color: #6B7280; font-size: 0.9rem; }
+        .multimidia .icon-box { color: #8e44ad; }
+        .multimidia .btn-acessar { background: #8e44ad; color: white; }
+
+        .website .icon-box { color: #27ae60; }
+        .website .btn-acessar { background: #27ae60; color: white; }
+
+        .escala .icon-box { color: #e67e22; }
+        .escala .btn-acessar { background: #e67e22; color: white; }
+
+        .retiro .icon-box { color: #2980b9; }
+        .retiro .btn-acessar { background: #2980b9; color: white; }
+
+        .gestao-midia .icon-box { color: #d33682; }
+        .gestao-midia .btn-acessar { background: #d33682; color: white; }
+
+        .outros .icon-box { color: #16a085; }
+        .outros .btn-acessar { background: #16a085; color: white; }
+
+        /* Animação */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            margin-top: 40px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.75rem;
+            padding-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <button class="login-btn" onclick="openLoginModal()" id="btn-login-header">🔒 Área do Líder</button>
-        <h1>Ministério de Dízimos e Ofertas</h1>
-        <h2 id="month-title">CARREGANDO...</h2>
-    </div>
-
     <div class="container">
-        <div id="schedule-container"></div>
-        
-        <div class="footer">
-            <p>Igreja Batista Nova Vida</p>
-            <p style="font-size: 0.8rem; color: #9CA3AF;">Desenvolvido por victorino.eng</p>
+        <div class="header">
+            <h1>Central de Sistemas</h1>
+            <p>Selecione o módulo para acessar</p>
         </div>
+
+        <div class="grid-cards">
+            
+            <a href="https://developegoncalves.github.io/escala-ministerio-infantil/estacionamento.html" class="card estacionamento" target="_blank">
+                <div class="icon-box"><i class="fa-solid fa-car-side"></i></div>
+                <h2>Estacionamento</h2>
+                <p>Alerta de placas e comunicação visual com o telão.</p>
+                <span class="btn-acessar">Acessar</span>
+            </a>
+
+            <a href="https://developegoncalves.github.io/escala-ministerio-infantil/" class="card infantil" target="_blank">
+                <div class="icon-box"><i class="fa-solid fa-children"></i></div>
+                <h2>M. Infantil</h2>
+                <p>Chamada de pais e gestão das crianças no sistema.</p>
+                <span class="btn-acessar">Acessar</span>
+            </a>
+
+            <a href="https://mediaflowv3.netlify.app/" class="card multimidia" target="_blank">
+                <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
+                <h2>Multimídia</h2>
+                <p>Gestão de Escalas e ferramentas de organização.</p>
+                <span class="btn-acessar">Acessar</span>
+            </a>
+
+            <a href="https://www.ibnvjc.com.br/" class="card website" target="_blank">
+                <div class="icon-box"><i class="fa-solid fa-church"></i></div>
+                <h2>Página IBNV</h2>
+                <p>Site oficial, notícias, agenda e informações.</p>
+                <span class="btn-acessar">Ir para Site</span>
+            </a>
+
+            <a href="https://developegoncalves.github.io/avisos-e-ofertas/" class="card escala" target="_blank">
+                <div class="icon-box"><i class="fa-solid fa-clipboard-list"></i></div>
+                <h2>Avisos & Ofertas</h2>
+                <p>Escalas semanais e avisos internos da igreja.</p>
+                <span class="btn-acessar">Ver Escalas</span>
+            </a>
+
+            <a href="https://developegoncalves.github.io/retiro-huios/" class="card retiro" target="_blank">
+                <div class="icon-box"><i class="fa-solid fa-mountain-sun"></i></div>
+                <h2>Retiro Huios</h2>
+                <p>Inscrições e cronogramas do retiro de jovens.</p>
+                <span class="btn-acessar">Acessar</span>
+            </a>
+
+            <a href="https://developegoncalves.github.io/gestao-multimidia/" class="card gestao-midia" target="_blank">
+                <div class="icon-box"><i class="fa-solid fa-camera-retro"></i></div>
+                <h2>Gestão de Mídia</h2>
+                <p>Upload de fotos e aprovação de materiais (admin123).</p>
+                <span class="btn-acessar">Gerenciar</span>
+            </a>
+
+            <a href="#" class="card outros">
+                <div class="icon-box"><i class="fa-solid fa-folder-open"></i></div>
+                <h2>Outros</h2>
+                <p>Links diversos e ferramentas compartilhadas.</p>
+                <span class="btn-acessar">Acessar</span>
+            </a>
+
+        </div>
+
+        <footer>
+            <p>&copy; 2024 IBNV - Gestão Interna</p>
+        </footer>
     </div>
 
-    <div class="modal-overlay" id="modal-login">
-        <div class="modal" style="max-width: 400px;">
-            <h3>🔒 Acesso Restrito</h3>
-            <input type="password" id="admin-pass" placeholder="Senha do Líder">
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal('modal-login')">Cancelar</button>
-                <button class="btn-confirm" onclick="checkLogin()">Entrar</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-edit-culto">
-        <div class="modal" style="max-width: 400px;">
-            <h3 id="modal-culto-title">📝 Editar Escala</h3>
-            
-            <label style="font-size:0.8rem; color:#666; font-weight:bold;">Data (Dia/Mês)</label>
-            <input type="text" id="edit-date" placeholder="Ex: 01/02">
-            
-            <label style="font-size:0.8rem; color:#666; font-weight:bold;">Dia da Semana</label>
-            <select id="edit-day">
-                <option value="Domingo">Domingo (18:00)</option>
-                <option value="Quinta-feira">Quinta-feira (19:30)</option>
-            </select>
-
-            <label style="font-size:0.8rem; color:#666; font-weight:bold;">Coordenador do Culto</label>
-            <select id="edit-dirigente"></select>
-
-            <label style="font-size:0.8rem; color:#666; font-weight:bold;">Pessoa da Oferta</label>
-            <select id="edit-oferta"></select>
-
-            <div class="modal-actions" style="justify-content: space-between;">
-                <button id="btn-delete-culto" class="btn-delete" onclick="deleteCulto()">Excluir Dia</button>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-cancel" onclick="closeModal('modal-edit-culto')">Cancelar</button>
-                    <button class="btn-confirm" onclick="saveCulto()">Salvar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-avisos">
-        <div class="modal">
-            <h3>📢 Editar Avisos Globais</h3>
-            <p style="font-size:0.8rem; color:#666; margin-bottom:15px;">Defina a validade. O aviso aparecerá em todos os cultos até a data escolhida.</p>
-            <div id="avisos-container"></div>
-            <button class="btn-add-aviso" onclick="addNewAvisoField()">+ Adicionar Aviso</button>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal('modal-avisos')">Cancelar</button>
-                <button class="btn-confirm" onclick="saveAvisos()">Salvar Avisos</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // ========================
-        // 1. CONFIGURAÇÃO FIREBASE
-        // ========================
-        const firebaseConfig = {
-            apiKey: "AIzaSyBI5S5ciZioheWabi0W0Ii_r0e3RsYm3iw",
-            authDomain: "cadastro-final-cc77f.firebaseapp.com",
-            databaseURL: "https://cadastro-final-cc77f-default-rtdb.firebaseio.com",
-            projectId: "cadastro-final-cc77f",
-            storageBucket: "cadastro-final-cc77f.firebasestorage.app",
-            messagingSenderId: "229086987694",
-            appId: "1:229086987694:web:52f1a32f4b1a9f5be2743f",
-            measurementId: "G-9F9WBCMH6Y"
-        };
-        
-        if (!firebase.apps.length) { 
-            firebase.initializeApp(firebaseConfig); 
-        }
-        const db = firebase.database();
-
-        // ========================
-        // 2. DADOS
-        // ========================
-        let isAdmin = false;
-        const ADMIN_PASS = "1234";
-
-        const coordenadoresPermitidos = ['Daniel', 'Alex', 'Delson', 'Alberto'];
-        const photoMap = {
-            'Daniel': 'img/daniel.jpg', 'Alex': 'img/alex.jpg', 'Delson': 'img/delson.jpg', 'Alberto': 'img/alberto.jpg',
-            'João': 'img/joao.jpg', 'Alan': 'img/alan.jpg', 'Zé Carlos': 'img/zecarlos.jpg', 'Anselmo': 'img/anselmo.jpg',
-            'Luziene': 'img/luziene.jpg', 'Maurício': 'img/mauricio.jpg', 'Tarcísio': 'img/tarcisio.jpg', 
-            'Rhuam': 'img/rhuam.jpg', 'Rosângela': 'img/rosangela.jpg', 'Penha': 'img/penha.jpg'
-        };
-
-        // Dados Iniciais (Avisos e Escala Limpa)
-        let avisosData = [
-            { id: 1, titulo: 'SÉRIE DEUS PROVEDOR', info: 'Todas as Quintas-Feiras às 19h30.', validade: '2026-02-28' },
-            { id: 2, titulo: 'EBD DINÂMICA', info: 'Março 2026, das 08h às 09h30.', validade: '2026-03-31' }
-        ];
-
-        let escalaData = [
-            { id: 'culto1', date: '01/02', day: 'Domingo', dirigente: 'Daniel', services: [{ type: 'Oferta', person: 'Alan' }]},
-            { id: 'culto2', date: '05/02', day: 'Quinta-feira', dirigente: 'Daniel', services: [{ type: 'Oferta', person: 'Penha' }]},
-            { id: 'culto3', date: '08/02', day: 'Domingo', dirigente: 'Alex', services: [{ type: 'Oferta', person: 'Zé Carlos' }]},
-            { id: 'culto4', date: '12/02', day: 'Quinta-feira', dirigente: 'Alex', services: [{ type: 'Oferta', person: 'Rhuam' }]}
-        ];
-
-        // ========================
-        // 3. CARREGAR DO BANCO
-        // ========================
-        function loadData() {
-            // Carregar Escalas de Ofertas
-            db.ref('escala_ofertas').on('value', (snapshot) => {
-                const data = snapshot.val();
-                escalaData = [];
-                if (data) {
-                    Object.keys(data).forEach(key => {
-                        escalaData.push({ id: key, ...data[key] });
-                    });
-                }
-                render();
-                updateHeaderMonth();
-            });
-
-            // Carregar Avisos de Ofertas
-            db.ref('avisos_ofertas').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.items) {
-                    avisosData = data.items;
-                } else {
-                    avisosData = []; 
-                }
-                render();
-            });
-        }
-
-        function updateHeaderMonth() {
-            if(escalaData.length === 0) return;
-            const firstItem = escalaData[0];
-            const [d, m] = firstItem.date.split('/');
-            const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
-            const nomeMes = meses[parseInt(m) - 1] || '';
-            document.getElementById('month-title').innerText = `ESCALA ${nomeMes} 2026`;
-        }
-
-        // ========================
-        // 4. RENDERIZAR TELA
-        // ========================
-        function getInitials(n) { return n.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase(); }
-        function getAvatar(n, bg) {
-            const p = photoMap[n];
-            if(p) return `<div class="role-icon" style="background:${bg}"><img src="${p}" onerror="this.style.display='none';this.parentNode.innerText='${getInitials(n)}'"></div>`;
-            return `<div class="role-icon" style="background:${bg}">${getInitials(n)}</div>`;
-        }
-        function parseCultoDate(dateStr) {
-            const [d, m] = dateStr.split('/');
-            return new Date(2026, parseInt(m)-1, parseInt(d));
-        }
-
-        function render() {
-            const container = document.getElementById('schedule-container');
-            const today = new Date(); today.setHours(0,0,0,0);
-
-            // Ordena as datas para não bagunçar
-            escalaData.sort((a, b) => parseCultoDate(a.date) - parseCultoDate(b.date));
-
-            const html = escalaData.map((item) => {
-                const itemDate = parseCultoDate(item.date);
-                const isToday = itemDate.getTime() === today.getTime();
-                const isPast = itemDate < today;
-                const isSunday = item.day.toLowerCase().includes('domingo');
-                
-                const horario = isSunday ? '18:00' : '19:30';
-                const themeClass = isSunday ? 'theme-domingo' : 'theme-quinta';
-                const statusClass = isToday ? 'today' : (isPast ? 'past' : '');
-                const dirBg = isSunday ? 'linear-gradient(135deg, #FFB75E, #ED8F03)' : 'linear-gradient(135deg, #8E2DE2, #4A00E0)';
-                const stdBg = '#CBD5E0; color: #4A5568';
-                const editStyle = isAdmin ? 'display: block;' : 'display: none;';
-
-                let rolesHtml = `
-                    <div class="role-card dirigente">
-                        ${getAvatar(item.dirigente, dirBg)}
-                        <div class="role-info"><h4>⭐ Coordenador</h4><p style="color: #6D28D9; font-weight: 700;">${item.dirigente}</p></div>
-                    </div>
-                `;
-
-                item.services.forEach((serv) => {
-                    rolesHtml += `
-                        <div class="role-card">
-                            ${getAvatar(serv.person, stdBg)}
-                            <div class="role-info"><h4>${serv.type}</h4><p>${serv.person}</p></div>
-                        </div>
-                    `;
-                });
-
-                let avisosHtml = '';
-                if (!isPast) {
-                    const avisosDoDia = avisosData.filter(aviso => {
-                        if(!aviso.validade) return true;
-                        const dataValidade = new Date(aviso.validade); dataValidade.setHours(23, 59, 59, 999); 
-                        return itemDate <= dataValidade;
-                    });
-                    if (avisosDoDia.length > 0) {
-                        const listaDetalhes = avisosDoDia.map(av => `<div class="detail-row"><span class="detail-title">${av.id}) ${av.titulo}</span><span class="detail-text">- ${av.info}</span></div>`).join('');
-                        avisosHtml = `
-                            <div class="avisos-box">
-                                <button class="edit-avisos-btn" style="${editStyle}" onclick="openAvisosModal()">✏️ Editar Avisos</button>
-                                <button class="avisos-btn" onclick="toggleScript(this)"><span>📋 AVISOS (${avisosDoDia.length})</span><span>▼</span></button>
-                                <div class="avisos-content">${listaDetalhes}</div>
-                            </div>
-                        `;
-                    } else {
-                        avisosHtml = isAdmin ? `<div class="avisos-box"><button class="edit-avisos-btn" style="display:flex; position:relative; top:0; width:100%; justify-content:center;" onclick="openAvisosModal()">✏️ Nenhum aviso. Criar?</button></div>` : '';
-                    }
-                }
-
-                const [d, m] = item.date.split('/');
-                const monthNames = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
-                const shortMonth = monthNames[parseInt(m) - 1] || '';
-                
-                // Botão de Editar a Escala (visível só para admin)
-                const btnEditEscala = isAdmin ? `<button class="btn-edit-escala" onclick="openEditCultoModal('${item.id}')">✏️ Editar Escala</button>` : '';
-
-                return `
-                    <div class="card ${themeClass} ${statusClass}">
-                        <div class="card-header-flex">
-                            <div class="date-display"><span class="date-day">${d}</span><span class="date-month">${shortMonth}</span></div>
-                            <div class="day-title"><h3>${item.day} às ${horario}</h3><span>Culto de Adoração</span></div>
-                            ${btnEditEscala}
-                        </div>
-                        <div class="roles-container">${rolesHtml}</div>
-                        ${avisosHtml}
-                    </div>
-                `;
-            }).join('');
-
-            // Botão Gigante de Adicionar (visível só para admin)
-            const addCultoBtn = isAdmin ? `<button onclick="openEditCultoModal()" style="display:block; width:100%; padding:15px; background:#10B981; color:white; border-radius:12px; border:none; margin-top:20px; font-weight:bold; cursor:pointer; font-size: 1rem; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">➕ ADICIONAR NOVO DIA</button>` : '';
-
-            container.innerHTML = html + addCultoBtn;
-        }
-
-        function toggleScript(btn) {
-            const c = btn.nextElementSibling;
-            c.classList.toggle('open');
-            btn.querySelector('span:last-child').innerHTML = c.classList.contains('open') ? '▲' : '▼';
-        }
-
-        // ========================
-        // 5. FUNÇÕES DE EDIÇÃO (PAINEL ADMIN)
-        // ========================
-        function openLoginModal() { document.getElementById('modal-login').style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
-        function checkLogin() {
-            if(document.getElementById('admin-pass').value === ADMIN_PASS) {
-                isAdmin = true;
-                document.getElementById('btn-login-header').innerText = "🔓 Modo Edição Ativo";
-                document.getElementById('btn-login-header').style.background = "#10B981";
-                closeModal('modal-login');
-                render();
-            } else { alert("Senha incorreta!"); }
-        }
-
-        // === EDITAR E ADICIONAR CULTO ===
-        let currentCultoId = null;
-
-        function openEditCultoModal(id = null) {
-            currentCultoId = id;
-            const dirSelect = document.getElementById('edit-dirigente');
-            const ofertaSelect = document.getElementById('edit-oferta');
-            const btnDelete = document.getElementById('btn-delete-culto');
-            
-            // Preenche as caixas de seleção com os nomes disponíveis
-            dirSelect.innerHTML = coordenadoresPermitidos.map(n => `<option value="${n}">${n}</option>`).join('');
-            ofertaSelect.innerHTML = Object.keys(photoMap).map(n => `<option value="${n}">${n}</option>`).join('');
-
-            if (id) {
-                // Modo Edição
-                document.getElementById('modal-culto-title').innerText = "📝 Editar Escala";
-                const culto = escalaData.find(c => c.id === id);
-                document.getElementById('edit-date').value = culto.date;
-                document.getElementById('edit-day').value = culto.day;
-                dirSelect.value = culto.dirigente;
-                ofertaSelect.value = culto.services.length > 0 ? culto.services[0].person : '';
-                btnDelete.style.display = 'block'; // Mostra botão excluir
-            } else {
-                // Modo Adicionar Novo
-                document.getElementById('modal-culto-title').innerText = "✨ Novo Dia de Escala";
-                document.getElementById('edit-date').value = "";
-                document.getElementById('edit-day').value = "Domingo";
-                btnDelete.style.display = 'none'; // Esconde botão excluir
-            }
-            
-            document.getElementById('modal-edit-culto').style.display = 'flex';
-        }
-
-        function saveCulto() {
-            const dateVal = document.getElementById('edit-date').value;
-            const dayVal = document.getElementById('edit-day').value;
-            const dirVal = document.getElementById('edit-dirigente').value;
-            const ofertaVal = document.getElementById('edit-oferta').value;
-
-            if(!dateVal) { alert("Por favor, preencha a data (Ex: 15/02)"); return; }
-
-            if (currentCultoId) {
-                // Atualizar Existente
-                const culto = escalaData.find(c => c.id === currentCultoId);
-                culto.date = dateVal;
-                culto.day = dayVal;
-                culto.dirigente = dirVal;
-                culto.services = [{ type: 'Oferta', person: ofertaVal }];
-                db.ref('escala_ofertas/' + culto.id).set(culto);
-            } else {
-                // Adicionar Novo
-                const newId = 'culto_' + new Date().getTime();
-                const newCulto = {
-                    id: newId,
-                    date: dateVal,
-                    day: dayVal,
-                    dirigente: dirVal,
-                    services: [{ type: 'Oferta', person: ofertaVal }]
-                };
-                escalaData.push(newCulto);
-                db.ref('escala_ofertas/' + newId).set(newCulto);
-            }
-            
-            closeModal('modal-edit-culto');
-            render();
-        }
-
-        function deleteCulto() {
-            if(!currentCultoId) return;
-            if(confirm("Tem certeza que deseja EXCLUIR este dia da escala?")) {
-                escalaData = escalaData.filter(c => c.id !== currentCultoId);
-                db.ref('escala_ofertas/' + currentCultoId).remove();
-                closeModal('modal-edit-culto');
-                render();
-            }
-        }
-
-        // === AVISOS ===
-        function openAvisosModal() {
-            const container = document.getElementById('avisos-container');
-            container.innerHTML = ''; 
-            avisosData.forEach(av => { createAvisoInput(av.titulo, av.info, av.validade); });
-            document.getElementById('modal-avisos').style.display = 'flex';
-        }
-
-        function createAvisoInput(titulo = '', info = '', validade = '') {
-            const container = document.getElementById('avisos-container');
-            const div = document.createElement('div');
-            div.className = 'aviso-edit-row';
-            if(!validade) { const d = new Date(); d.setMonth(d.getMonth() + 1); validade = d.toISOString().split('T')[0]; }
-
-            div.innerHTML = `
-                <button class="btn-remove-aviso" onclick="this.parentElement.remove()">🗑️</button>
-                <label style="font-size:0.8rem; color:#666; font-weight:bold;">Título</label>
-                <input type="text" class="input-titulo" value="${titulo}" placeholder="Ex: SÉRIE JONAS">
-                <label style="font-size:0.8rem; color:#666; font-weight:bold;">Informação</label>
-                <textarea class="input-info" rows="2" placeholder="Detalhes">${info}</textarea>
-                <div style="margin-top:5px;"><label style="font-size:0.75rem; color:#666;">📅 Mostrar até quando?</label><br><input type="date" class="input-validade" value="${validade}" style="border:1px solid #4F46E5; background:#EEF2FF; padding:8px; border-radius:8px;"></div>
-            `;
-            container.appendChild(div);
-        }
-
-        function addNewAvisoField() {
-            createAvisoInput();
-            const modal = document.querySelector('#modal-avisos .modal');
-            setTimeout(() => modal.scrollTop = modal.scrollHeight, 100);
-        }
-
-        function saveAvisos() {
-            const container = document.getElementById('avisos-container');
-            const rows = container.querySelectorAll('.aviso-edit-row');
-            const novosAvisos = [];
-            rows.forEach((row, index) => {
-                const titulo = row.querySelector('.input-titulo').value;
-                const info = row.querySelector('.input-info').value;
-                const validade = row.querySelector('.input-validade').value;
-                if(titulo.trim() || info.trim()) { novosAvisos.push({ id: index + 1, titulo, info, validade }); }
-            });
-            avisosData = novosAvisos;
-            db.ref('avisos_ofertas').set({ items: novosAvisos });
-            closeModal('modal-avisos');
-            render();
-        }
-
-        loadData();
-    </script>
 </body>
 </html>
+
