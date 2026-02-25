@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Atualização Cadastral | Kids</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-body: #f7f5ef;       
+            --primary-green: #2a6148; 
+            --secondary-green: #38b2ac;
+            --text-dark: #1a202c;
+            --text-muted: #a0aec0;
+            --white: #ffffff;
+            --radius-card: 16px;
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            margin: 0; background-color: var(--bg-body); 
+            background-image: radial-gradient(#e5e0d8 1px, transparent 1px);
+            background-size: 20px 20px; color: var(--text-dark); 
+            display: flex; flex-direction: column; height: 100vh; overflow-x: hidden; 
+        }
+
+        /* HEADER */
+        .app-header { 
+            background: var(--primary-green); color: white; padding: 25px 20px 30px; 
+            text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; 
+            box-shadow: 0 4px 10px rgba(42, 97, 72, 0.3); position: relative; flex-shrink: 0; z-index: 10;
+        }
+        .app-header h1 { margin: 0; font-size: 1.5rem; font-weight: 900; }
+        .app-header p { margin: 5px 0 0; font-size: 0.9rem; font-weight: 700; color: #d8f3dc; }
+        
+        .btn-admin { 
+            position: absolute; top: 20px; right: 20px; color: white; background: rgba(255,255,255,0.2); 
+            border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; 
+            font-weight: 800; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-voltar {
+            position: absolute; top: 20px; left: 20px; color: var(--primary-green); background: white; 
+            border: none; padding: 8px 15px; border-radius: 12px; cursor: pointer; display: none; font-weight: 800; 
+        }
+
+        .container { padding: 15px; flex: 1; overflow-y: auto; scroll-behavior: smooth; }
+
+        /* VIEWS */
+        .view { display: none; animation: fadeIn 0.3s ease; } .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: white; padding: 20px; border-radius: var(--radius-card); box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+
+        /* BUSCA E SELEÇÃO DE TURMA */
+        .search-box {
+            width: 100%; padding: 14px 20px; border-radius: 20px; border: 2px solid #e2e8f0;
+            background: #f8fafc; font-size: 1rem; font-family: inherit; font-weight: 700; 
+            color: var(--primary-green); outline: none; transition: 0.2s; margin-bottom: 15px;
+        }
+        .search-box:focus { border-color: var(--primary-green); background: white; box-shadow: var(--shadow-sm); }
+
+        .filter-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; justify-content: flex-start; scroll-snap-type: x mandatory;}
+        .filter-row::-webkit-scrollbar { display: none; }
+        .pill-tab { 
+            background: white; border: 2px solid #e2e8f0; padding: 10px 18px; border-radius: 25px; 
+            font-weight: 800; color: #718096; white-space: nowrap; cursor: pointer; transition: 0.2s; 
+            font-size: 0.9rem; display: flex; align-items: center; gap: 6px; scroll-snap-align: start;
+        }
+        .pill-tab.active { background: var(--primary-green); color: white; border-color: var(--primary-green); transform: translateY(-2px); box-shadow: var(--shadow-md);}
+
+        .kids-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 12px; margin-top: 15px; }
+        .kid-card { 
+            background: white; border-radius: 20px; padding: 15px 5px; text-align: center; 
+            box-shadow: var(--shadow-sm); cursor: pointer; border: 2px solid #f1f2f6; transition: 0.2s; 
+            display:flex; flex-direction:column; align-items:center;
+        }
+        .kid-card:active { transform: scale(0.95); }
+        .kid-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid #e2e8f0; margin-bottom: 8px; }
+        .kid-name { font-size: 0.8rem; font-weight: 800; color: var(--text-dark); line-height: 1.2; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;}
+        .kid-room-tag { font-size: 0.65rem; color: var(--text-muted); font-weight: 800; margin-top: 4px; }
+
+        /* FORMULÁRIO */
+        .profile-selected { text-align: center; margin-bottom: 20px; }
+        .profile-selected .kid-img { width: 80px; height: 80px; border-width: 4px; border-color: var(--primary-green); margin-bottom: 5px; }
+        .profile-selected h2 { margin: 0; color: var(--primary-green); font-weight: 900; font-size: 1.3rem; }
+        .profile-selected span { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
+
+        .form-group { margin-bottom: 18px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
+        .form-group input, .form-group select { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #e2e8f0; 
+            background: #f8fafc; font-size: 0.95rem; font-family: inherit; font-weight: 700; color: var(--primary-green); outline: none; transition: 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary-green); background: white; }
+        
+        .form-highlight { background: #e6fffa; border: 2px solid #38b2ac; border-radius: 16px; padding: 15px; margin-bottom: 20px; }
+        .form-highlight label { color: #234e52; font-size: 0.9rem; }
+
+        .btn-success { 
+            width: 100%; border: none; padding: 16px; border-radius: 15px; font-weight: 900; 
+            cursor: pointer; font-size: 1.1rem; color: white; background: var(--primary-green); 
+            transition: 0.2s; box-shadow: 0 4px 10px rgba(42, 97, 72, 0.3);
+        }
+        .btn-success:active { transform: scale(0.98); }
+
+        /* MODAL DE SENHA E SUCESSO */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; width: 90%; max-width: 400px; padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .success-icon { font-size: 4rem; color: #38b2ac; margin-bottom: 10px; }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <header class="app-header">
+        <button class="btn-voltar" id="btn-voltar" onclick="voltarParaSelecao()"><i class="fas fa-arrow-left"></i></button>
+        <button class="btn-admin" onclick="openAdminModal()"><i class="fas fa-lock"></i></button>
+        <h1>📝 Cadastro Kids</h1>
+        <p>Atualize os dados do seu filho(a)</p>
+    </header>
+
+    <div class="container">
+        
+        <div id="step-1" class="view active">
+            <div class="card" style="text-align: center; padding: 25px 15px;">
+                <h2 style="color: var(--primary-green); font-weight: 900; margin: 0 0 10px; font-size: 1.3rem;">Bem-vindos, Pais!</h2>
+                <p style="color: var(--text-muted); font-weight: 700; margin: 0 0 20px; font-size: 0.9rem;">Busque pelo nome da criança ou filtre pela turma abaixo:</p>
+                
+                <input type="text" id="search-kid" class="search-box" placeholder="🔍 Digite o nome da criança..." oninput="applyFilters()">
+
+                <div class="filter-row" id="room-filters"></div>
+            </div>
+            
+            <div class="kids-grid" id="kids-list"></div>
+        </div>
+
+        <div id="step-2" class="view">
+            <div class="card">
+                <div class="profile-selected">
+                    <img src="" id="form-kid-img" class="kid-img">
+                    <h2 id="form-kid-name">Nome da Criança</h2>
+                    <span id="form-kid-room">Turma</span>
+                </div>
+
+                <form id="cadastroForm" onsubmit="enviarFormulario(event)">
+                    <div class="form-group">
+                        <label>Nome Completo do Responsável</label>
+                        <input type="text" id="inp-responsavel" placeholder="Ex: Maria Silva (Mãe)" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>WhatsApp (Apenas números com DDD)</label>
+                        <input type="tel" id="inp-telefone" placeholder="Ex: 27999999999" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data de Nascimento da Criança</label>
+                        <input type="date" id="inp-nascimento" required>
+                    </div>
+
+                    <div class="form-highlight">
+                        <label><i class="fas fa-campground"></i> O seu filho(a) vai participar da gincana anual <b>"Família em Campo"</b>?</label>
+                        <select id="inp-gincana" required>
+                            <option value="" disabled selected>Selecione uma opção...</option>
+                            <option value="Sim">Sim, vamos participar! 🎉</option>
+                            <option value="Não">Não poderá participar.</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-success" id="btn-enviar">Salvar Cadastro <i class="fas fa-check-circle"></i></button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-content">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2 style="color: var(--primary-green); margin-top: 0;">Tudo Certo!</h2>
+            <p style="color: var(--text-muted); font-weight: 700; font-size: 0.95rem;">Os dados foram atualizados com sucesso no sistema do Ministério.</p>
+            <button class="btn-success" style="margin-top: 15px;" onclick="location.reload()">Concluir</button>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-content">
+            <i class="fas fa-lock" style="font-size:3rem; color:var(--primary-green); margin-bottom:15px;"></i>
+            <h3 style="margin-top:0; color:var(--text-dark);">Acesso da Liderança</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom: 20px;">Digite a senha para baixar a planilha de cadastros.</p>
+            
+            <input type="password" id="adminSenha" placeholder="Senha" style="width:100%; padding:15px; border-radius:12px; border:2px solid #e2e8f0; text-align:center; font-size:1.2rem; font-weight:900; margin-bottom:15px; outline:none;">
+            
+            <div style="display:flex; gap:10px;">
+                <button class="btn-success" style="background:#e2e8f0; color:#4a5568; box-shadow:none;" onclick="closeAdminModal()">Cancelar</button>
+                <button class="btn-success" onclick="exportarCadastros()">Baixar Planilha</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO DO FIREBASE (O MESMO DO SEU SISTEMA)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI5S5ciZioheWabi0W0Ii_r0e3RsYm3iw", authDomain: "cadastro-final-cc77f.firebaseapp.com",
+            databaseURL: "https://cadastro-final-cc77f-default-rtdb.firebaseio.com", projectId: "cadastro-final-cc77f",
+            storageBucket: "cadastro-final-cc77f.firebasestorage.app", messagingSenderId: "229086987694",
+            appId: "1:229086987694:web:52f1a32f4b1a9f5be2743f", measurementId: "G-9F9WBCMH6Y"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        const roomsData = { berçario: { name: "Berçário", icon: "👶" }, alfa: { name: "Alfa", icon: "🧸" }, beta: { name: "Beta", icon: "🎨" }, gama: { name: "Gama", icon: "⚽" }, ômega: { name: "Ômega", icon: "📚" } };
+        
+        const kidsRawData = {
+            berçario: [ { name: "Maria Eduarda", photo: "m_eduarda.png" }, { name: "João Pedro", photo: "j_pedro.png" }, { name: "Sophia R.", photo: "sophia.png" }, { name: "Benício L.", photo: "benicio.png" }, { name: "Lara M.", photo: "lara.png" } ],
+            alfa: [ { name: "Alice", photo: "alice_alfa.png" }, { name: "Levi", photo: "levi_alfa.png" }, { name: "Emily", photo: "emily_alfa.png" }, { name: "Arthur", photo: "arthur_alfa.png" }, { name: "Laura", photo: "laura_alfa.png" }, { name: "Benício", photo: "benicio_aalfa.png" }, { name: "Heloísa", photo: "heloisa_alfa.png" }, { name: "Júlio", photo: "julio_alfa.png" }, { name: "Bernardo", photo: "bernardo_alfa.png" }, { name: "Isadora", photo: "isadora_alfa.png" }, { name: "Emanuel", photo: "emanuel_alfa.png" }, { name: "Heitor", photo: "heitor_alfa.png" }, { name: "Davi", photo: "davi_alfa.png" }, { name: "Elisa", photo: "elisa_alfa.png" }, { name: "Vitoria", photo: "vitoria_alfa.png" }, { name: "Théo", photo: "Theo_alfa.png" } ],
+            beta: [ { name: "Maitê", photo: "maite_beta.png" }, { name: "Liz Pacheco", photo: "liz_pacheco_beta.png" }, { name: "Helena M.", photo: "helena_beta.png" }, { name: "Pedro", photo: "pedro_beta.png" }, { name: "Tiffany", photo: "tiffany_beta.png" }, { name: "Arthur Souza", photo: "arthur_beta.png" }, { name: "João", photo: "joao_beta.png" }, { name: "José Luís", photo: "jose_luis_beta.png" }, { name: "João Miguel", photo: "joao_miguel_beta.png" }, { name: "Matteo", photo: "matteo_beta.png" }, { name: "Murilo", photo: "murilo_beta.png" }, { name: "Elisa", photo: "elisa_beta.png" }, { name: "Safira", photo: "safira_beta.png" }, { name: "Manuella", photo: "manuella_beta.png" }, { name: "Nicoly", photo: "nicoly_beta.png" }, { name: "Helena Pimenta.", photo: "helena_p_beta.png" }, { name: "Enrico J.", photo: "enrico_beta.png" }, { name: "Liz Medeiros", photo: "liz_Medeiros_beta.png" }, { name: "Arthur R.", photo: "arthur_beta.png" }, { name: "Benjamin", photo: "benjamin_beta.png" }, { name: "Ana Luiza", photo: "ana_luiza_beta.png" }, { name: "Liz Couto", photo: "liz_couto_beta.png" } ],
+            gama: [ { name: "Isaac", photo: "isaac_gama.png" }, { name: "Davi", photo: "davi_gama.png" }, { name: "Sophia", photo: "sophia_gama.png" }, { name: "Wendel", photo: "wendel_gama.png" }, { name: "Isabela", photo: "isabela_gama.png" }, { name: "Lauren", photo: "lauren_gama.png" }, { name: "Brayan", photo: "brayan_gama.png" }, { name: "Emanuelly", photo: "emanuelly_gama.png" }, { name: "Kauã", photo: "kaua_gama.png" }, { name: "Vicente", photo: "vicente_gama.png" }, { name: "Elisa Romão", photo: "elisa_romao_gama.png" }, { name: "Helena Miranda", photo: "helena_gama.png" }, { name: "Ana Clara", photo: "ana_clara_gama.png" }, { name: "Érick", photo: "erick_gama.png" }, { name: "Lorenzo", photo: "lorenzo_gama.png" }, { name: "Theo", photo: "theo_gama.png" }, { name: "Brunelly", photo: "Brunelly_gama.png" }, { name: "Vitor", photo: "Vitor_gama.png" }, { name: "João Pedro Barros", photo: "joao_pedro_gama.png" } ],
+            ômega: [ { name: "Nicolly", photo: "nicolly_omega.png" }, { name: "Saulo", photo: "saulo_omega.png" }, { name: "Kemily", photo: "kemily_omega.png" }, { name: "Maria Eduarda", photo: "maria_eduarda_omega.png" }, { name: "Lorena", photo: "lorena_omega.png" }, { name: "Laura", photo: "laura_omega.png" }, { name: "Eduardo", photo: "eduardo_omega.png" }, { name: "Kauã", photo: "kaua_omega.png" }, { name: "Pedro Lucas", photo: "pedro_lucas_omega.png" }, { name: "Italo", photo: "italo_omega.png" }, { name: "Davi", photo: "davi_omega.png" }, { name: "Laiz", photo: "laiz_omega.png" }, { name: "Micael", photo: "micael_omega.png" }, { name: "Ketelly", photo: "ketelly_omega.png" }, { name: "Bernardo", photo: "bernardo_omega.png" }, { name: "Asafe", photo: "asafe_omega.png" }, { name: "Isabelly", photo: "isabelly_omega.png" }, { name: "Heitor", photo: "heitor_omega.png" }, { name: "Lívia", photo: "livya_omega.png" }, { name: "Smith", photo: "smith_omega.png" }, { name: "Mikeias", photo: "mikeias_omega.png" }, { name: "Raphaela", photo: "raphaela_omega.png" }, { name: "Éric", photo: "eric_omega.png" }, { name: "Lavínia", photo: "lavinia_omega.png" }, { name: "Pietra", photo: "pietra_omega.png" }, { name: "Sophia", photo: "sophia_omega.png" }, { name: "João Miguel", photo: "joao_miguel_omega.png" }, { name: "Maria", photo: "maria_omega.png" }, { name: "Pedro", photo: "pedro_omega.png" }, { name: "Emilly sophia", photo: "emillysophia_omega.png" }, { name: "Kethelyn Lorrana", photo: "KethelynLorrana_omega.png" }, { name: "Yasmim da Silva", photo: "Yasmim_omega.png" }, { name: "Saulo", photo: "saulo_omega.png" }, { name: "Marlim felicio", photo: "marlim_omega.png" }, { name: "Arthur Oliveira", photo: "arthuroliveira_omega.png" }, { name: "Davi santana", photo: "Davisantana_omega.png" } ]
+        };
+
+        // Cria lista plana com todas as crianças
+        let allKidsFlat = [];
+        Object.keys(kidsRawData).forEach(roomKey => {
+            kidsRawData[roomKey].forEach(kid => {
+                allKidsFlat.push({ ...kid, roomKey: roomKey, roomName: roomsData[roomKey].name });
+            });
+        });
+
+        let selectedKid = null;
+        let currentFilter = 'Todos';
+
+        window.onload = () => {
+            const container = document.getElementById('room-filters');
+            
+            // Botão TODOS
+            const btnTodos = document.createElement('div');
+            btnTodos.className = 'pill-tab active';
+            btnTodos.innerHTML = `🌟 Todos`;
+            btnTodos.onclick = () => { setFilter('Todos', btnTodos); };
+            container.appendChild(btnTodos);
+
+            // Botões de Turmas
+            Object.keys(roomsData).forEach(key => {
+                const btn = document.createElement('div'); btn.className = 'pill-tab';
+                btn.innerHTML = `${roomsData[key].icon} ${roomsData[key].name}`;
+                btn.onclick = () => { setFilter(key, btn); };
+                container.appendChild(btn);
+            });
+
+            applyFilters();
+        };
+
+        function setFilter(filterVal, btnElement) {
+            currentFilter = filterVal;
+            document.querySelectorAll('#room-filters .pill-tab').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            applyFilters();
+        }
+
+        // Função que aplica Pesquisa de Texto e Filtro de Turma juntos
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-kid').value.toLowerCase();
+            const container = document.getElementById('kids-list');
+            container.innerHTML = '';
+            
+            let filteredKids = allKidsFlat;
+
+            // 1. Filtra por Turma
+            if (currentFilter !== 'Todos') {
+                filteredKids = filteredKids.filter(k => k.roomKey === currentFilter);
+            }
+
+            // 2. Filtra por Busca de Texto
+            if (searchTerm) {
+                filteredKids = filteredKids.filter(k => k.name.toLowerCase().includes(searchTerm));
+            }
+
+            if (filteredKids.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #a0aec0; padding: 20px; font-weight: 800;">Nenhuma criança encontrada.</div>';
+                return;
+            }
+
+            // Renderiza
+            filteredKids.forEach(kid => {
+                const div = document.createElement('div'); div.className = 'kid-card';
+                const imgSrc = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+                
+                div.innerHTML = `
+                    <img src="${imgSrc}" class="kid-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random&color=fff'">
+                    <div class="kid-name">${kid.name}</div>
+                    <div class="kid-room-tag">${kid.roomName}</div>
+                `;
+                div.onclick = () => abrirFormulario(kid.name, kid.roomKey, kid.roomName, imgSrc);
+                container.appendChild(div);
+            });
+        }
+
+        function abrirFormulario(name, roomKey, roomName, photo) {
+            selectedKid = { name, roomKey, roomName };
+            
+            document.getElementById('form-kid-img').src = photo;
+            document.getElementById('form-kid-name').innerText = name;
+            document.getElementById('form-kid-room').innerText = roomName;
+
+            document.getElementById('step-1').classList.remove('active');
+            document.getElementById('step-2').classList.add('active');
+            document.getElementById('btn-voltar').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function voltarParaSelecao() {
+            document.getElementById('step-2').classList.remove('active');
+            document.getElementById('step-1').classList.add('active');
+            document.getElementById('btn-voltar').style.display = 'none';
+        }
+
+        function enviarFormulario(event) {
+            event.preventDefault(); 
+            
+            const btn = document.getElementById('btn-enviar');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            const resp = document.getElementById('inp-responsavel').value;
+            const tel = document.getElementById('inp-telefone').value;
+            const nasc = document.getElementById('inp-nascimento').value;
+            const gincana = document.getElementById('inp-gincana').value;
+
+            // 1. Salva no banco de formulários para exportação
+            const formData = {
+                aluno: selectedKid.name,
+                turma: selectedKid.roomName,
+                responsavel: resp,
+                telefone: tel,
+                nascimento: nasc,
+                gincana: gincana,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            db.ref('formularios_pais').push(formData).then(() => {
+                
+                // 2. Atualiza o cadastro oficial do aluno no Painel Admin (Sincronização Mágica!)
+                const safeName = selectedKid.name.replace(/[.#$[\]]/g, ''); 
+                db.ref(`dados_extras/alunos/${selectedKid.roomKey}/${safeName}`).update({
+                    dob: nasc,
+                    phone: tel,
+                    guardian: resp
+                }).then(() => {
+                    document.getElementById('successModal').classList.add('active');
+                });
+
+            }).catch(e => {
+                alert("Ocorreu um erro. Tente novamente.");
+                btn.innerHTML = 'Salvar Cadastro <i class="fas fa-check-circle"></i>';
+                btn.disabled = false;
+            });
+        }
+
+        // ============================================
+        // FUNÇÕES ADMINISTRATIVAS (EXPORTAR)
+        // ============================================
+        function openAdminModal() {
+            document.getElementById('adminSenha').value = '';
+            document.getElementById('adminModal').classList.add('active');
+        }
+        function closeAdminModal() { document.getElementById('adminModal').classList.remove('active'); }
+
+        function exportarCadastros() {
+            const senha = document.getElementById('adminSenha').value;
+            if(senha !== '1234') { alert("Senha incorreta!"); return; }
+
+            document.getElementById('adminSenha').value = 'Baixando...';
+
+            db.ref('formularios_pais').once('value').then(snapshot => {
+                const data = snapshot.val();
+                if(!data) {
+                    alert("Nenhum cadastro recebido ainda.");
+                    closeAdminModal();
+                    return;
+                }
+
+                let csvContent = "\uFEFFDATA PREENCHIMENTO;ALUNO;TURMA;RESPONSAVEL;WHATSAPP;DATA DE NASCIMENTO;FAMILIA EM CAMPO\n";
+                
+                Object.values(data).forEach(f => {
+                    let dataPreenchimento = new Date(f.timestamp).toLocaleDateString('pt-BR');
+                    
+                    let nascFormatada = f.nascimento;
+                    if(nascFormatada.includes('-')) {
+                        const p = nascFormatada.split('-');
+                        nascFormatada = `${p[2]}/${p[1]}/${p[0]}`;
+                    }
+
+                    let aluno = (f.aluno||'').replace(/;/g, '');
+                    let turma = (f.turma||'').replace(/;/g, '');
+                    let resp = (f.responsavel||'').replace(/;/g, '');
+                    let tel = (f.telefone||'').replace(/;/g, '');
+                    let gin = (f.gincana||'').replace(/;/g, '');
+
+                    csvContent += `${dataPreenchimento};${aluno};${turma};${resp};${tel};${nascFormatada};${gin}\n`;
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); 
+                const url = URL.createObjectURL(blob); const link = document.createElement("a");
+                link.setAttribute("href", url); link.setAttribute("download", "Cadastros_Atualizados.csv"); 
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                
+                closeAdminModal();
+            });
+        }
+    </script>
+</body>
+</html>

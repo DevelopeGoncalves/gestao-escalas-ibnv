@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ministério Infantil | Painel de Liderança</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           DESIGN SYSTEM
+           ========================================= */
+        :root {
+            --primary: #8b5cf6;       /* Roxo Vibrante */
+            --primary-dark: #6d28d9;
+            --secondary: #f59e0b;     /* Laranja/Ambar */
+            --success: #10b981;       /* Verde */
+            --danger: #ef4444;        /* Vermelho */
+            --santa-ceia: #be123c;    /* Vinho para Santa Ceia */
+            --whatsapp: #25D366;      /* Verde WhatsApp */
+            
+            --sidebar-bg: #1e1b4b;    /* Azul Noturno */
+            --bg-body: #f3f4f6;
+            --surface: #ffffff;
+            
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            
+            --radius-card: 24px;
+            --radius-btn: 14px;
+            
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { margin: 0; background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR --- */
+        .sidebar { 
+            width: 260px; background: var(--sidebar-bg); color: white; padding: 25px; 
+            display: flex; flex-direction: column; transition: 0.3s ease;
+            z-index: 1001; box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+            height: 100vh; overflow-y: auto; 
+        }
+        
+        .brand { font-size: 1.3rem; font-weight: 800; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; line-height: 1.2; flex-shrink: 0; }
+        .brand i { color: var(--secondary); font-size: 1.6rem; }
+
+        .menu-btn { 
+            padding: 14px 18px; cursor: pointer; border-radius: var(--radius-btn); margin-bottom: 8px; 
+            display: flex; align-items: center; gap: 12px; transition: 0.2s; color: #9ca3af; 
+            text-decoration: none; font-weight: 700; font-size: 0.95rem; border: none; background: transparent; width: 100%; text-align: left;
+            flex-shrink: 0;
+        }
+        .menu-btn:hover { background: rgba(255,255,255,0.08); color: white; transform: translateX(5px); }
+        .menu-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
+
+        .sidebar-footer {
+            margin-top: auto; padding-top: 20px; 
+            border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+        }
+        
+        .btn-website-row {
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(255,255,255,0.08); 
+            padding: 10px 15px; border-radius: 12px;
+            text-decoration: none; color: white; font-weight: 700; font-size: 0.9rem;
+            transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .btn-website-row:hover { background: var(--secondary); border-color: var(--secondary); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); }
+        
+        .mini-logo { width: 32px; height: 32px; object-fit: contain; background: white; border-radius: 50%; padding: 2px; }
+
+        /* --- CONTEÚDO PRINCIPAL --- */
+        .main { flex: 1; overflow-y: auto; padding: 25px; position: relative; scroll-behavior: smooth; }
+        .header-mobile { display: none; align-items: center; justify-content: space-between; margin-bottom: 25px; background: white; padding: 15px 20px; border-radius: 20px; box-shadow: var(--shadow); }
+
+        /* --- CARDS & ESTATÍSTICAS --- */
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        
+        .stat-card { 
+            background: white; padding: 20px; border-radius: var(--radius-card); 
+            box-shadow: var(--shadow); position: relative; overflow: hidden;
+        }
+        .stat-card h2 { margin: 5px 0; font-size: 2rem; color: var(--text-main); }
+        .stat-card span { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-icon { position: absolute; right: -10px; bottom: -10px; font-size: 4rem; opacity: 0.05; color: var(--primary); }
+
+        /* --- COMPONENTES VISUAIS --- */
+        .card-section { background: var(--surface); padding: 25px; border-radius: var(--radius-card); box-shadow: var(--shadow); margin-bottom: 25px; }
+        .section-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: var(--sidebar-bg); display: flex; align-items: center; gap: 10px; }
+        
+        .filter-bar { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 5px; }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .pill-btn {
+            background: white; border: 1px solid #e5e7eb; padding: 10px 20px; border-radius: 30px; 
+            font-weight: 700; color: var(--text-muted); white-space: nowrap; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow);
+        }
+        .pill-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3); transform: scale(1.05); }
+
+        .kids-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; margin-top: 20px; }
+        .kid-card {
+            background: white; border-radius: 20px; padding: 10px; text-align: center;
+            box-shadow: var(--shadow); cursor: pointer; border: 2px solid transparent;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
+        }
+        .kid-card:active { transform: scale(0.95); }
+        .kid-card.present { border-color: var(--success); background: #ecfdf5; transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2); }
+        .kid-card.present::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; top: 5px; right: 5px; width: 22px; height: 22px;
+            background: var(--success); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+        .kid-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid #f3f4f6; margin-bottom: 8px; transition: 0.2s; }
+        .kid-card.present .kid-img { border-color: var(--success); transform: scale(1.05); }
+        .kid-name { font-size: 0.8rem; font-weight: 700; line-height: 1.2; color: var(--text-main); }
+
+        .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
+        
+        .person-card {
+            background: white; border-radius: 20px; padding: 15px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: var(--shadow); border: 1px solid #e5e7eb; position: relative;
+            transition: transform 0.2s;
+        }
+        .person-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .person-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid #eef2ff; }
+        .person-info { flex: 1; }
+        .person-info h4 { margin: 0; color: var(--text-main); font-size: 1rem; font-weight: 800; }
+        .person-info p { margin: 4px 0; color: var(--text-muted); font-size: 0.85rem; display: flex; align-items: center; gap: 5px; }
+        
+        .room-tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 800; text-transform: uppercase; margin-top: 5px; display: inline-block; }
+
+        .action-buttons-group { display: flex; flex-direction: column; gap: 8px; margin-left: auto; }
+        .btn-edit-mini {
+            width: 40px; height: 40px; background: #e5e7eb; color: #4b5563;
+            border-radius: 50%; border: none; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-size: 1.1rem;
+            transition: transform 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .btn-edit-mini:hover { transform: scale(1.1); background: var(--secondary); color: white; }
+
+        .person-actions { margin-left: auto; display: flex; flex-direction: column; gap: 5px; }
+        .btn-wa-mini {
+            width: 40px; height: 40px; background: var(--whatsapp); color: white;
+            border-radius: 50%; border: none; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; font-size: 1.3rem;
+            transition: transform 0.2s; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+        }
+        .btn-wa-mini:hover { transform: scale(1.1); }
+
+        .birthday-group-title {
+            margin: 20px 0 10px; color: var(--primary); font-weight: 800; font-size: 1rem;
+            border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;
+        }
+        .birthday-card {
+            background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+            border: 1px solid #fcd34d; border-radius: 18px; padding: 15px;
+            display: flex; align-items: center; gap: 15px; margin-bottom: 10px;
+        }
+        .birthday-day {
+            background: var(--secondary); color: white; border-radius: 12px;
+            padding: 8px 12px; text-align: center; font-weight: 800;
+            display: flex; flex-direction: column; line-height: 1;
+        }
+        .birthday-day span { font-size: 0.7rem; opacity: 0.8; font-weight: 600; text-transform: uppercase; }
+        .birthday-day strong { font-size: 1.2rem; }
+
+        .teachers-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .teacher-chip {
+            display: inline-flex; align-items: center; background: #ffffff; border: 1px solid #e2e8f0;
+            padding-right: 15px; border-radius: 50px; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            cursor: default;
+        }
+        .teacher-chip:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); border-color: var(--primary-light); }
+        .teacher-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-right: 10px; }
+        .teacher-name { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
+
+        .form-group { margin-bottom: 15px; }
+        input, select { 
+            width: 100%; padding: 14px; border-radius: var(--radius-btn); border: 2px solid #e5e7eb; 
+            background: #f9fafb; font-size: 0.95rem; font-family: inherit; transition: 0.2s;
+        }
+        input:focus, select:focus { outline: none; border-color: var(--primary); background: white; }
+        
+        .btn { 
+            width: 100%; border: none; padding: 16px; border-radius: var(--radius-btn); 
+            font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            gap: 10px; font-size: 1rem; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 8px 15px -3px rgba(139, 92, 246, 0.4); }
+        .btn-success { background: var(--success); color: white; box-shadow: 0 8px 15px -3px rgba(16, 185, 129, 0.4); }
+        .btn-danger { background: #fee2e2; color: var(--danger); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        .upload-area { 
+            border: 3px dashed #cbd5e1; border-radius: var(--radius-card); padding: 30px; 
+            text-align: center; background: #f8fafc; cursor: pointer; transition: 0.2s; color: var(--text-muted);
+        }
+        .upload-area:hover { border-color: var(--primary); background: #eff6ff; color: var(--primary); }
+        
+        .schedule-item { 
+            background: white; padding: 20px; border-radius: 18px; margin-bottom: 15px;
+            border-left: 5px solid var(--primary); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 5px;
+            transition: all 0.3s ease; position: relative;
+        }
+        
+        .schedule-item.santa-ceia { background-color: #fff1f2; border-left-color: var(--santa-ceia); }
+        .schedule-item.santa-ceia .date-badge-style { background: var(--santa-ceia) !important; color: white !important; }
+        .badge-ceia { display:inline-block; font-size:0.7rem; background: var(--santa-ceia); color: white; padding: 2px 8px; border-radius: 8px; margin-left: 5px; font-weight: bold; }
+
+        .schedule-actions { display: none; justify-content: flex-end; gap: 10px; margin-top: 10px; border-top: 1px solid #f3f4f6; padding-top: 10px; }
+        .admin-mode .schedule-actions { display: flex; }
+        
+        .btn-edit-sm { background: var(--secondary); color: white; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .btn-del-sm { background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+
+        .teacher-select-list {
+            max-height: 250px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: var(--radius-btn);
+            background: #f9fafb; display: flex; flex-direction: column;
+        }
+        .teacher-select-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition:0.2s; user-select: none;
+        }
+        .teacher-select-item:last-child { border-bottom: none; }
+        .teacher-select-item:hover { background: #eff6ff; }
+        .teacher-select-item input[type="checkbox"] { width: 22px; height: 22px; margin: 0; cursor: pointer; accent-color: var(--primary); }
+        .teacher-select-item img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+        .teacher-select-item span { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+        .teacher-select-item small { color: #9ca3af; margin-left: auto; font-size: 0.75rem; }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000;
+            align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active { display: flex; }
+        
+        .modal-content {
+            background: white; width: 90%; max-width: 500px; padding: 25px; border-radius: var(--radius-card);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh; overflow-y: auto; 
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .keypad-btn {
+            padding: 12px; font-size: 1.3rem; font-weight: bold;
+            background: #f3f4f6; border: 2px solid #e5e7eb; border-radius: 12px;
+            cursor: pointer; transition: 0.2s; color: var(--text-main); touch-action: manipulation;
+        }
+        .keypad-btn:active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(0.95); }
+        .keypad-btn.action-btn { background: #e5e7eb; font-size: 1.1rem; }
+
+        .history-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; 
+            padding: 15px; margin-bottom: 10px; display: flex; flex-direction: column;
+        }
+        .history-card.ceia { background: #fff0f2; border-color: #fecdd3; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .history-date { font-weight: 800; color: var(--text-main); }
+        .history-room { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); background: white; padding: 2px 8px; border-radius: 6px; border: 1px solid #e5e7eb; }
+
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(30, 27, 75, 0.6); backdrop-filter: blur(4px); z-index: 1000; }
+        .overlay.active { display: block; }
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -280px; height: 100%; }
+            .sidebar.active { left: 0; }
+            .header-mobile { display: flex; }
+            .main { padding: 15px; padding-bottom: 80px; }
+            #passwordModal .modal-content { padding: 15px; width: 95%; }
+            #passwordModal i.fa-lock { font-size: 2rem !important; margin-bottom: 10px !important; }
+            #adminPasswordInput { font-size: 1.5rem !important; margin-bottom: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal-content" style="text-align:center;">
+            <i class="fas fa-lock" style="font-size:3rem; color:var(--primary); margin-bottom:20px;"></i>
+            <h3>Acesso Restrito</h3>
+            <p style="color:var(--text-muted); margin-bottom:10px; font-size:0.9rem;">Digite a senha de líder.</p>
+            
+            <input type="password" id="adminPasswordInput" placeholder="_ _ _ _" readonly 
+                   style="text-align:center; font-size:2rem; letter-spacing: 10px; font-weight:800; background:white; color:var(--primary);">
+            
+            <div class="keypad-grid">
+                <button class="keypad-btn" onclick="addPassNum(1)">1</button>
+                <button class="keypad-btn" onclick="addPassNum(2)">2</button>
+                <button class="keypad-btn" onclick="addPassNum(3)">3</button>
+                <button class="keypad-btn" onclick="addPassNum(4)">4</button>
+                <button class="keypad-btn" onclick="addPassNum(5)">5</button>
+                <button class="keypad-btn" onclick="addPassNum(6)">6</button>
+                <button class="keypad-btn" onclick="addPassNum(7)">7</button>
+                <button class="keypad-btn" onclick="addPassNum(8)">8</button>
+                <button class="keypad-btn" onclick="addPassNum(9)">9</button>
+                <button class="keypad-btn action-btn" onclick="clearPass()" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+                <button class="keypad-btn" onclick="addPassNum(0)">0</button>
+                <button class="keypad-btn action-btn" onclick="backspacePass()"><i class="fas fa-backspace"></i></button>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn btn-danger" onclick="closePasswordModal()">Cancelar</button>
+                <button class="btn btn-success" onclick="checkAdminPassword()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scheduleFormModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-top:0;" id="modalFormTitle">✏️ Gerenciar Escala</h3>
+            <input type="hidden" id="editRoomKey"><input type="hidden" id="editIndex"><input type="hidden" id="formMode"> 
+            <div class="form-group"><label>Turma / Sala</label><select id="modalRoomSelect" onchange="updateTeacherListByRoomSelect()"><option value="">Selecione a Sala...</option></select></div>
+            <div class="form-group"><label>Data</label><input type="date" id="modalDate" style="font-weight:700; color:var(--primary);"></div>
+            <div class="form-group"><label>Lição / Tema</label><input type="text" id="modalLesson" placeholder="Ex: A Criação"></div>
+            <div class="form-group"><label>Selecionar Professores (Troca/Edição)</label><small style="display:block; color:var(--text-muted); margin-bottom:5px;">Marque quem entra e desmarque quem sai.</small><div id="teacherSelectionList" class="teacher-select-list"></div></div>
+            <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-danger" onclick="closeScheduleFormModal()">Cancelar</button><button class="btn btn-success" onclick="saveScheduleForm()">Salvar Escala</button></div>
+        </div>
+    </div>
+
+    <div id="chamadaHistoryModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: var(--primary);"><i class="fas fa-history"></i> Histórico de Chamadas</h3>
+                <button class="btn btn-danger" style="width: auto; padding: 8px 12px; border-radius: 10px;" onclick="closeChamadaHistory()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <button class="btn btn-success" style="width: 100%; padding: 12px; font-size:0.9rem;" onclick="exportChamadaCSV()"><i class="fas fa-file-excel"></i> Exportar Histórico para Excel</button>
+            </div>
+
+            <div id="chamadaHistoryContainer" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
+                </div>
+        </div>
+
+        <div id="editPersonModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:var(--primary);"><i class="fas fa-user-edit"></i> Editar Dados</h3>
+            <p id="editPersonName" style="font-weight:800; margin-bottom: 15px; font-size: 1.1rem; color: var(--text-main);"></p>
+            
+            <input type="hidden" id="editPersonType">
+            <input type="hidden" id="editPersonRoom">
+            <input type="hidden" id="editPersonOriginalName">
+
+            <div class="form-group">
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Data de Nascimento</label>
+                <input type="date" id="editPersonDob">
+            </div>
+            <div id="editPersonStudentFields">
+                <div class="form-group">
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Nome do Responsável</label>
+                    <input type="text" id="editPersonGuardian" placeholder="Ex: Maria (Mãe)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">WhatsApp (Apenas números)</label>
+                <input type="tel" id="editPersonPhone" placeholder="Ex: 27999999999">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn btn-danger" onclick="closeEditPersonModal()">Cancelar</button>
+                <button class="btn btn-success" onclick="savePersonEdit()">Salvar Dados</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="brand">
+            <i class="fas fa-shapes"></i>
+            <span>Ministério<br><span style="color:var(--secondary)">Infantil</span></span>
+        </div>
+        
+        <button class="menu-btn active" onclick="showSection('dashboard', this)"><i class="fas fa-chart-pie"></i> Visão Geral</button>
+        <button class="menu-btn" onclick="showSection('chamada', this)"><i class="fas fa-check-circle"></i> Chamada</button>
+        <button class="menu-btn" onclick="showSection('telao', this)"><i class="fas fa-bullhorn"></i> Telão / Aviso</button>
+        <button class="menu-btn" onclick="showSection('escalas', this)"><i class="fas fa-calendar-alt"></i> Escalas</button>
+        <button class="menu-btn" onclick="showSection('historico', this)"><i class="fas fa-history"></i> Históricos</button>
+        <button class="menu-btn" onclick="showSection('licoes', this)"><i class="fas fa-book-open"></i> Lições</button>
+        <button class="menu-btn" onclick="showSection('cadastro', this)"><i class="fas fa-users-cog"></i> Admin</button>
+        <button class="menu-btn" onclick="showSection('imersao', this)"><i class="fas fa-campground"></i> Imersão Bíblica</button>
+
+        <div class="sidebar-footer">
+            <a href="https://victorinoeng.com.br/" target="_blank" class="btn-website-row">
+                <img src="img/logo.png" class="mini-logo" alt="Logo">
+                <span>Acessar Site</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="main">
+        <header class="header-mobile">
+            <i class="fas fa-bars" onclick="toggleMenu()" style="font-size: 1.4rem; color: var(--text-main);"></i>
+            <span style="font-weight: 800; font-size: 1.1rem;">Ministério Infantil</span>
+            <div style="width: 35px; height: 35px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">M</div>
+        </header>
+
+        <section id="dashboard" class="content-section">
+            <h2 class="section-title">👋 Olá, Bem-vindo ao Ministério Infantil!!</h2>
+            
+            <div class="grid-stats">
+                <div class="stat-card"><span>Total de Alunos</span><h2 id="total-kids-count">0</h2><i class="fas fa-child stat-icon"></i></div>
+                <div class="stat-card"><span>Professores</span><h2 id="total-teachers-count">0</h2><i class="fas fa-chalkboard-teacher stat-icon"></i></div>
+                <div class="stat-card" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white;">
+                    <span style="color: rgba(255,255,255,0.8);">Próximo Culto</span><h2 style="color: white; font-size:1.5rem;" id="next-sunday-date">--/--</h2><i class="fas fa-calendar-day stat-icon" style="color:white; opacity:0.1;"></i>
+                </div>
+            </div>
+
+            <div class="card-section">
+                <div class="section-title"><i class="fas fa-birthday-cake" style="color:var(--secondary)"></i> Aniversariantes do Mês</div>
+                <h4 class="birthday-group-title">🎓 Alunos</h4><div id="birthdays-students-list"></div>
+                <h4 class="birthday-group-title">👩‍🏫 Professores</h4><div id="birthdays-teachers-list"></div>
+            </div>
+        </section>
+
+        <section id="chamada" class="content-section hidden">
+            <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div><i class="fas fa-check-double"></i> Chamada Visual</div>
+                <button class="btn btn-primary" style="width: auto; padding: 8px 15px; font-size: 0.9rem;" onclick="openChamadaHistory()"><i class="fas fa-list-alt"></i> Ver Chamadas</button>
+            </div>
+            
+            <div class="filter-bar" id="room-filters-chamada"></div>
+
+            <div class="card-section">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Data</label><input type="date" id="dateInput"></div>
+                    <div><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Professores</label><input type="text" id="teacherName" placeholder="Ex: Ana e Bia" oninput="checkCallFormValidity()"></div>
+                </div>
+                <h4 style="margin: 0; color: var(--text-muted);">Toque na foto para marcar:</h4>
+                <div id="kidsList" class="kids-grid"><div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #9ca3af;">Selecione uma sala acima 👆</div></div>
+                <div style="margin-top: 30px; border-top: 1px solid #f3f4f6; padding-top: 20px;">
+                    <div style="background: #fff7ed; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ffedd5;">
+                        <div style="display: flex; gap: 10px;"><input type="text" id="extraKidName" placeholder="Nome do Visitante" style="background:white;"><button class="btn btn-primary" style="width: auto; background: var(--secondary);" onclick="addExtraKid()">Add</button></div>
+                    </div>
+                    <button class="btn btn-success" id="btn-submit-chamada" onclick="submitCall()" disabled><i class="fas fa-paper-plane"></i> Enviar Chamada</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="telao" class="content-section hidden">
+            <div class="section-title"><i class="fas fa-bullhorn"></i> Chamar Pais no Telão</div>
+            <p style="color:var(--text-muted);">Selecione a turma e depois a criança.</p>
+            <div class="form-group"><label style="font-size: 0.8rem; font-weight: 700;">Sala</label><div class="filter-bar" id="room-filters-telao"></div></div>
+            <div class="card-section"><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Buscar Criança</label><input type="text" id="searchTelao" placeholder="🔍 Digite o nome da criança..." oninput="renderTelaoList()"><div id="telaoList" class="people-grid" style="margin-top:20px;"><div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #9ca3af;">Selecione uma sala acima 👆</div></div></div>
+        </section>
+
+        <section id="escalas" class="content-section hidden">
+            <div class="section-title" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span><i class="fas fa-calendar-alt"></i> Escalas</span>
+                    <button class="btn btn-primary" style="width:auto; padding: 8px 15px; font-size:0.8rem;" onclick="openPasswordModal()">🔐 Gerenciar</button>
+                </div>
+                <button class="btn" style="background: #374151; color: white; width: 100%; padding: 10px;" onclick="copyScheduleToClipboard()">
+                    <i class="fas fa-copy"></i> Copiar Texto para WhatsApp
+                </button>
+            </div>
+
+            <div id="adminSchedulePanel" class="card-section hidden" style="border: 2px dashed var(--secondary); background: #fffbeb;">
+                <h4 style="margin-top:0; color:var(--secondary);">🛠️ Modo Edição Ativo</h4>
+                <p style="font-size:0.9rem;">Para <b>trocar professores</b> de uma escala existente, clique em "Editar".</p>
+                <button class="btn btn-success" onclick="openNewScheduleModal()"><i class="fas fa-plus-circle"></i> Adicionar Nova Data</button>
+            </div>
+            
+            <div class="form-group">
+                <label style="font-size: 0.8rem; font-weight: 700;">Filtrar por Sala</label>
+                <div class="filter-bar" id="room-filters-escala"></div>
+            </div>
+            
+            <div class="form-group">
+                <label style="font-size: 0.8rem; font-weight: 700;">Filtrar por Data</label>
+                <input type="text" id="teacherSearchInput" placeholder="🔍 Buscar professor..." oninput="filterByTeacher(this.value)" style="margin-bottom: 10px;">
+                <div class="filter-bar" id="date-filters-escala"></div>
+            </div>
+            
+            <div id="scheduleGrid" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </section>
+
+        <section id="historico" class="content-section hidden">
+            <div class="section-title"><i class="fas fa-history"></i> Históricos e Registros</div>
+            <div class="card-section">
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom:5px; display:block;">Tipo de Culto:</label>
+                <div class="filter-bar"><button class="pill-btn active" onclick="setHistoryType('all', this)">Tudo</button><button class="pill-btn" onclick="setHistoryType('ceia', this)"><i class="fas fa-wine-glass-alt"></i> Santa Ceia</button></div>
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom:5px; display:block;">Filtrar por Sala:</label><div class="filter-bar" id="room-filters-history"></div>
+                
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom:5px; display:block; margin-top:10px;">Filtrar por Mês:</label>
+                <div class="filter-bar" id="month-filters-history"></div>
+
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px; margin-top:10px;"><i class="fas fa-info-circle"></i> A Santa Ceia ocorre automaticamente no <b>2º domingo</b> de cada mês.</p>
+                <div id="historyGrid"></div>
+            </div>
+        </section>
+
+        <section id="licoes" class="content-section hidden">
+            <div class="section-title"><i class="fas fa-folder-open"></i> Material Didático</div>
+            <div class="card-section">
+                <div class="form-group"><label style="font-size: 0.8rem; font-weight: 700;">Sala</label><div class="filter-bar" id="room-filters-licoes"></div></div>
+                <div class="form-group"><label style="font-size: 0.8rem; font-weight: 700;">Data</label><div class="filter-bar" id="date-filters-licoes"></div></div>
+                <div id="adminLessonControls" class="hidden">
+                    <label for="pdfFile" class="upload-area" id="fileUploadLabel"><i class="fas fa-cloud-upload-alt" style="font-size: 3rem; margin-bottom: 10px; color: var(--primary);"></i><div style="font-weight: 700;">Toque para enviar PDF/Foto</div><div style="font-size: 0.8rem;">(Máx: 5MB)</div></label>
+                    <input type="file" id="pdfFile" accept="application/pdf,image/jpeg,image/png" onchange="handleFileSelect()" multiple style="display:none;">
+                    <div id="fileInfo" style="text-align:center; margin-top:10px; font-weight:700; color:var(--success);"></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;"><button class="btn btn-primary" id="btnUploadLesson" onclick="uploadLesson()" disabled>Enviar Arquivo</button><button class="btn btn-danger" id="btnDeleteLesson" onclick="deleteLesson()" disabled><i class="fas fa-trash"></i> Apagar</button></div>
+                </div>
+                <button id="lessonUnlockBtn" class="btn" style="background:#e5e7eb; color:#6b7280; margin-bottom:20px;" onclick="openPasswordModal()"><i class="fas fa-lock"></i> Acesso Líder / Upload</button>
+                <button class="btn btn-success" id="btnDownloadLesson" onclick="downloadLesson()" disabled style="margin-top:10px;"><i class="fas fa-download"></i> Baixar Lição</button>
+                <div id="pdfViewerContent" style="margin-top: 20px; background: #1e1b4b; border-radius: 20px; min-height: 400px; padding: 10px; display: flex; align-items: center; justify-content: center;"><span style="color: rgba(255,255,255,0.3);">Visualizador</span></div>
+            </div>
+        </section>
+
+        <section id="cadastro" class="content-section hidden">
+            <div class="section-title"><i class="fas fa-users-cog"></i> Gestão de Pessoas</div>
+            <div class="filter-bar"><button class="pill-btn active" onclick="toggleAdminTab('alunos', this)">👦 Alunos</button><button class="pill-btn" onclick="toggleAdminTab('professores', this)">👩‍🏫 Professores</button></div>
+            <div id="adminStudentRoomFilter" class="" style="margin-bottom: 15px;"><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Filtrar Alunos por Turma:</label><div class="filter-bar" id="room-filters-admin-students"></div></div>
+            <div id="adminTeacherRoomFilter" class="hidden" style="margin-bottom: 15px;"><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Filtrar Professores por Turma:</label><div class="filter-bar" id="room-filters-admin-teachers"></div></div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;"><input type="text" id="adminSearch" placeholder="🔍 Buscar por nome..." oninput="filterAdminList()" style="margin-bottom:0;"><button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="toggleNewForm()"><i class="fas fa-plus"></i> Novo</button></div>
+            <div id="adminFormContainer" class="card-section hidden" style="border: 2px dashed var(--primary); background: #fdfbff;">
+                <h3 style="margin-top:0;">Novo Cadastro</h3>
+                <div class="form-group"><label>Nome Completo</label><input type="text" id="regName"></div>
+                <div class="form-group"><label>Data Nascimento</label><input type="date" id="regDob"></div>
+                <div id="studentFields"><div class="form-group"><label>Responsável</label><input type="text" id="regGuardian"></div><div class="form-group"><label>WhatsApp Resp.</label><input type="tel" id="regPhone" placeholder="DDD+Número"></div><div class="form-group"><label>Sala</label><select id="regRoom"><option value="Berçário">Berçário</option><option value="Alfa">Alfa</option><option value="Beta">Beta</option><option value="Gama">Gama</option><option value="Ômega">Ômega</option></select></div></div>
+                <div id="teacherFields" class="hidden"><div class="form-group"><label>WhatsApp Professor</label><input type="tel" id="regTeacherPhone" placeholder="DDD+Número"></div><div class="form-group"><label>Sala Preferencial</label><select id="regTeacherRoom"><option value="">(Opcional) Selecione a Turma</option><option value="Berçário">Berçário</option><option value="Alfa">Alfa</option><option value="Beta">Beta</option><option value="Gama">Gama</option><option value="Ômega">Ômega</option></select></div></div>
+                <div style="display:flex; gap:10px;"><button class="btn btn-danger" onclick="toggleNewForm()">Cancelar</button><button class="btn btn-success" onclick="submitRegistration()">Salvar</button></div>
+            </div>
+            <div id="adminListContainer" class="people-grid"></div>
+        </section>
+
+        <section id="imersao" class="content-section hidden">
+            <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div><i class="fas fa-campground"></i> Imersão Bíblica | Controle</div>
+                <button class="btn btn-success" style="width: auto; padding: 10px 15px;" onclick="exportImersaoCSV()"><i class="fas fa-file-excel"></i> Baixar Planilha</button>
+            </div>
+            
+            <div class="card-section">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0;">Acompanhe a pontuação de todos os alunos cadastrados no banco de dados da Imersão.</p>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Filtrar por Turma:</label>
+                    <div class="filter-bar" id="room-filters-imersao"></div>
+                </div>
+
+                <div id="imersaoAdminGrid" class="people-grid" style="margin-top: 20px;">
+                    <div style="grid-column: 1/-1; text-align: center; color: #9ca3af; padding: 20px;">Carregando dados da Imersão...</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // ============================================
+        // 0. FIREBASE CONFIG 
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI5S5ciZioheWabi0W0Ii_r0e3RsYm3iw",
+            authDomain: "cadastro-final-cc77f.firebaseapp.com",
+            databaseURL: "https://cadastro-final-cc77f-default-rtdb.firebaseio.com",
+            projectId: "cadastro-final-cc77f",
+            storageBucket: "cadastro-final-cc77f.firebasestorage.app",
+            messagingSenderId: "229086987694",
+            appId: "1:229086987694:web:52f1a32f4b1a9f5be2743f",
+            measurementId: "G-9F9WBCMH6Y"
+        };
+        
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        // ============================================
+        // 1. DADOS
+        // ============================================
+        const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz-zw2zwET3iSgtNKasbc4NuCIrmJuJ3k3gPk9YhtFW3oNx1YbyQGe0zbXeUre0uBxxIg/exec';
+        
+        const roomsData = {
+            berçario: { name: "Berçário", age: "0-2 anos", icon: "👶", color: "#6C63FF" },
+            alfa: { name: "Alfa", age: "3-4 anos", icon: "🧸", color: "#FF6584" },
+            beta: { name: "Beta", age: "5-6 anos", icon: "🎨", color: "#4299E1" },
+            gama: { name: "Gama", age: "7-8 anos", icon: "⚽", color: "#48BB78" },
+            ômega: { name: "Ômega", age: "9-11 anos", icon: "📚", color: "#ED8936" }
+        };
+
+        const kidsData = {
+            berçario: [ 
+                { id: 1, name: "Maria Eduarda", photo: "m_eduarda.png", dob: "2023-05-20", guardian: "Leidiane", phone: "27999752858" },
+                { id: 2, name: "João Pedro", photo: "j_pedro.png", dob: "2024-01-10", guardian: "Pai do João", phone: "27988888888" },
+                { id: 3, name: "Sophia R.", photo: "sophia.png", dob: "", guardian: "", phone: "" },
+                { id: 4, name: "Benício L.", photo: "benicio.png", dob: "", guardian: "", phone: "" },
+                { id: 5, name: "Lara M.", photo: "lara.png", dob: "", guardian: "", phone: "" }
+            ],
+            alfa: [ 
+                { id: 6, name: "Alice", photo: "alice_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 7, name: "Levi", photo: "levi_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 8, name: "Emily", photo: "emily_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 9, name: "Arthur", photo: "arthur_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 10, name: "Laura", photo: "laura_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 11, name: "Benício", photo: "benicio_aalfa.png", dob: "", guardian: "", phone: "" },
+                { id: 12, name: "Heloísa", photo: "heloisa_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 13, name: "Júlio", photo: "julio_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 14, name: "Bernardo", photo: "bernardo_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 15, name: "Isadora", photo: "isadora_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 16, name: "Emanuel", photo: "emanuel_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 17, name: "Heitor", photo: "heitor_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 18, name: "Davi", photo: "davi_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 19, name: "Elisa", photo: "elisa_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 20, name: "Vitoria", photo: "vitoria_alfa.png", dob: "", guardian: "", phone: "" },
+                { id: 21, name: "Théo", photo: "Theo_alfa.png", dob: "", guardian: "", phone: "" }
+            ],
+            beta: [ 
+                { id: 19, name: "Maitê", photo: "maite_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 20, name: "Liz Pacheco", photo: "liz_pacheco_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 21, name: "Helena M.", photo: "helena_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 22, name: "Pedro", photo: "pedro_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 23, name: "Tiffany", photo: "tiffany_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 24, name: "Arthur Souza", photo: "arthur_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 25, name: "João", photo: "joao_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 26, name: "José Luís", photo: "jose_luis_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 27, name: "João Miguel", photo: "joao_miguel_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 28, name: "Matteo", photo: "matteo_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 29, name: "Murilo", photo: "murilo_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 30, name: "Elisa", photo: "elisa_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 31, name: "Safira", photo: "safira_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 32, name: "Manuella", photo: "manuella_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 33, name: "Nicoly", photo: "nicoly_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 34, name: "Helena Pimenta.", photo: "helena_p_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 35, name: "Enrico J.", photo: "enrico_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 36, name: "Liz Medeiros", photo: "liz_Medeiros_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 37, name: "Arthur R.", photo: "arthur_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 38, name: "Benjamin", photo: "benjamin_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 39, name: "Ana Luiza", photo: "ana_luiza_beta.png", dob: "", guardian: "", phone: "" },
+                { id: 40, name: "Liz Couto", photo: "liz_couto_beta.png", dob: "", guardian: "", phone: "" }
+            ],
+            gama: [ 
+                { id: 39, name: "Isaac", photo: "isaac_gama.png", dob: "2023-05-20", guardian: "alex santana", phone: "27999456858" },
+                { id: 40, name: "Davi", photo: "davi_gama.png", dob: "", guardian: "", phone: "" },
+                { id: 41, name: "Sophia", photo: "sophia_gama.png", dob: "", guardian: "", phone: "" },
+                { id: 42, name: "Wendel", photo: "wendel_gama.png" }, { id: 43, name: "Isabela", photo: "isabela_gama.png" }, { id: 44, name: "Lauren", photo: "lauren_gama.png" },
+                { id: 45, name: "Brayan", photo: "brayan_gama.png" }, { id: 48, name: "Emanuelly", photo: "emanuelly_gama.png" }, { id: 49, name: "Kauã", photo: "kaua_gama.png" },
+                { id: 50, name: "Vicente", photo: "vicente_gama.png" }, { id: 51, name: "Elisa Romão", photo: "elisa_romao_gama.png" }, { id: 52, name: "Helena Miranda", photo: "helena_gama.png" },
+                { id: 53, name: "Ana Clara", photo: "ana_clara_gama.png" }, { id: 54, name: "Érick", photo: "erick_gama.png" }, { id: 55, name: "Lorenzo", photo: "lorenzo_gama.png" },
+                { id: 56, name: "Theo", photo: "theo_gama.png" }, { id: 57, name: "Brunelly", photo: "Brunelly_gama.png" }, { id: 58, name: "Vitor", photo: "Vitor_gama.png" }, { id: 59, name: "João Pedro Barros", photo: "joao_pedro_gama.png" }
+            ],
+            ômega: [ 
+                { id: 56, name: "Nicolly", photo: "nicolly_omega.png" }, { id: 57, name: "Saulo", photo: "saulo_omega.png" }, { id: 58, name: "Kemily", photo: "kemily_omega.png" },
+                { id: 59, name: "Maria Eduarda", photo: "maria_eduarda_omega.png" }, { id: 60, name: "Lorena", photo: "lorena_omega.png" }, { id: 61, name: "Laura", photo: "laura_omega.png" },
+                { id: 62, name: "Eduardo", photo: "eduardo_omega.png" }, { id: 63, name: "Kauã", photo: "kaua_omega.png" }, { id: 64, name: "Pedro Lucas", photo: "pedro_lucas_omega.png" },
+                { id: 65, name: "Italo", photo: "italo_omega.png" }, { id: 66, name: "Davi", photo: "davi_omega.png" }, { id: 67, name: "Laiz", photo: "laiz_omega.png" },
+                { id: 68, name: "Micael", photo: "micael_omega.png" }, { id: 69, name: "Ketelly", photo: "ketelly_omega.png" }, { id: 70, name: "Bernardo", photo: "bernardo_omega.png" },
+                { id: 71, name: "Asafe", photo: "asafe_omega.png" }, { id: 72, name: "Isabelly", photo: "isabelly_omega.png" }, { id: 73, name: "Heitor", photo: "heitor_omega.png" },
+                { id: 74, name: "Lívia", photo: "livya_omega.png" }, { id: 75, name: "Smith", photo: "smith_omega.png" }, { id: 76, name: "Mikeias", photo: "mikeias_omega.png" },
+                { id: 77, name: "Raphaela", photo: "raphaela_omega.png" }, { id: 78, name: "Éric", photo: "eric_omega.png" }, { id: 79, name: "Lavínia", photo: "lavinia_omega.png" },
+                { id: 80, name: "Pietra", photo: "pietra_omega.png" }, { id: 81, name: "Sophia", photo: "sophia_omega.png" }, { id: 82, name: "João Miguel", photo: "joao_miguel_omega.png" },
+                { id: 83, name: "Maria", photo: "maria_omega.png" }, { id: 84, name: "Pedro", photo: "pedro_omega.png" }, { id: 85, name: "Emilly sophia", photo: "emillysophia_omega.png" },
+                { id: 86, name: "Kethelyn Lorrana", photo: "KethelynLorrana_omega.png" }, { id: 87, name: "Yasmim da Silva", photo: "Yasmim_omega.png" }, { id: 88, name: "Saulo", photo: "saulo_omega.png" },
+                { id: 89, name: "Marlim felicio", photo: "marlim_omega.png" }, { id: 90, name: "Arthur Oliveira", photo: "arthuroliveira_omega.png" }, { id: 91, name: "Davi santana", photo: "Davisantana_omega.png" }
+            ]
+        };
+
+        // PROFESSORES
+        let fixedTeachersData = [
+            { name: "Leidiane Lopes dos Santos da Silva", photo: "leidiane.png", room: "Berçário", dob: "08/05", phone: "27999752858" },
+            { name: "Adriana Lopes dos Santos Martins ", photo: "adriana.png", room: "Berçário", dob: "14/09", phone: "2799890172" },
+            { name: "Sarah dos santos Tomaz", photo: "sarah.png", room: "Berçário", dob: "", phone: "27997804418" },
+            { name: "Maiara Nunes Monteiro", photo: "maiara.png", room: "Berçário", dob: "25/03", phone: "27992870249" },
+            { name: "Jussimere Pacheco da Silva", photo: "jussimere.png", room: "Berçário", dob: "21/09", phone: "27998004287" },
+            { name: "Ingrid Silva Coelho", photo: "ingrid.png", room: "Berçário", dob: "14/11", phone: "27997914148" },
+            { name: "Damares", photo: "damares.png", room: "Berçário", dob: "25/08", phone: "27988656968" },
+            { name: "ANA RAFAELA", photo: "ana_rafaela.png", room: "Berçário", dob: "30/04", phone: "27998836328" },
+            { name: "Eliane Rodrigues dos Santos", photo: "eliane.png", room: "Berçário", dob: "16/01", phone: "27999305729" },
+            { name: "Erica Jacob da Silva", photo: "erica.png", room: "Berçário", dob: "13/06", phone: "27998310296" },
+            { name: "Juscilene Amaral Pereira", photo: "juscilene.png", room: "Berçário", dob: "16/06", phone: "27998984088" },
+            { name: "Luiza Messa Lemos Farias", photo: "luiza.png", room: "Berçário", dob: "06/07", phone: "27998195812" },
+            { name: "Wagna da Penha meneguite", photo: "wagna.png", room: "Berçário", dob: "27/07", phone: "27998674501" },
+            { name: "Maria Eduarda Barbosa dos Santos", photo: "duda.png", room: "Berçário", dob: "29/08", phone: "27998145621" },
+            { name: "Arthur dos Santos da conceição", photo: "arthur_alfap2.png", room: "Alfa", dob: "24/07", phone: "992974538" },
+            { name: "Ester da Costa", photo: "ester.png", room: "Alfa", dob: "12/12", phone: "27997134275" },
+            { name: "Anna Victória Bebiano de Carvalho", photo: "ana_vitoria.png", room: "Alfa", dob: "21/05", phone: "27988601524" },
+            { name: "Iandra Jesus de Novais Santana", photo: "iandra.png", room: "Alfa", dob: "", phone: "27999172136" },
+            { name: "Paulo Henrique Mendes Dias", photo: "ph.png", room: "Alfa", dob: "12/02", phone: "27997518113" },
+            { name: "Roseane Jadyvsky", photo: "rose_jady.png", room: "Alfa", dob: "01/11", phone: "27999126172" },
+            { name: "Nathalia dos Santos Sepulcro", photo: "nathalia.png", room: "Alfa", dob: "27/12", phone: "27995708805" },
+            { name: "Ryan Oliveira da Silva", photo: "ryan.png", room: "Alfa", dob: "05/05", phone: "997257351" },
+            { name: "Amanda Francisca Batista dos Santos", photo: "amanda.png", room: "Alfa", dob: "06-06", phone: "27998102994" },
+            { name: "Ketley de novais Santana ", photo: "ketley.png", room: "Alfa", dob: "09/03", phone: "27997871721" },
+            { name: "Marilene Francisca  Batista", photo: "marilene.png", room: "Alfa", dob: "23/06", phone: "27998109876" },
+            { name: "Mariana de jesus alves de carvalho ", photo: "mariana.png", room: "Alfa", dob: "11/12", phone: "27988958756" },
+            { name: "Stefani Rodrigues Vieira", photo: "stefani.png", room: "Alfa", dob: "27/05", phone: "27998036736" },
+            { name: "Rosane de Lourdes pimenta", photo: "rose_pimenta.png", room: "Alfa", dob: "??", phone: "27992222121" },
+            { name: "Daniela da Silva", photo: "daniela_silva.png", room: "Alfa", dob: "30/05", phone: "27997961772" },
+            { name: "Emanuelly Andrade Conceição", photo: "emanuelly.png", room: "Alfa", dob: "27/04", phone: "27992569100" },
+            { name: "Ana Crysthina Martins Lyrio", photo: "ana_crystina.png", room: "Beta", dob: "25/04", phone: "27997833660" },
+            { name: "Mirian Pereira da Cruz da Cunha", photo: "mirian.png", room: "Beta", dob: "03/10", phone: "27996466554" },
+            { name: "DOUGLAS", photo: "douglas.png", room: "Beta", dob: "24/04", phone: "27999842037" },
+            { name: "Maxsuel Oliveira da Silva", photo: "maxsuel.png", room: "Beta", dob: "20/02", phone: "27998487376" },
+            { name: "Núbia Nascimento de Medeiros Dos Santos", photo: "nubia.png", room: "Beta", dob: "01/02", phone: "27999134090" },
+            { name: "Jean Meneguite de Jesus  ", photo: "jean.png", room: "Beta", dob: "27/09", phone: "27992579339" },
+            { name: "Elaine Pereira Rocha Anacleto", photo: "elaine.png", room: "Beta", dob: "21/06", phone: "27998584488" },
+            { name: "HELOISA", photo: "heloisa.png", room: "Beta", dob: "", phone: "27998144193" },
+            { name: "Ana Paula Nogueira Tongo", photo: "ana_paula.png", room: "Beta", dob: "01/10", phone: "27988017044" },
+            { name: "Marcia Reis ", photo: "marcia.png", room: "Beta", dob: "06/09", phone: "27998741710" },
+            { name: "Sophia Almeida de gois", photo: "sophiap.png", room: "Beta", dob: "29/10", phone: "27998270304"},
+            { name: "Arthur dos santos da Conceição  ", photo: "arthur_gamap1.png", room: "Gama", dob: "26/04", phone: "27996412271" },
+            { name: "Ana Beatriz Rodrigues de Souza", photo: "ana_beatriz.png", room: "Gama", dob: "19/05", phone: "27992236469" },
+            { name: "Ramon de Oliveira Correa", photo: "ramon.png", room: "Gama", dob: "11/07", phone: "27997009106" },
+            { name: "Ana Clara Silva Petersen", photo: "ana_clara.png", room: "Gama", dob: "30/08", phone: "27998209839" },
+            { name: "Lucas de Souza Fernandes", photo: "lucas.png", room: "Gama", dob: "05/01", phone: "27995054635" },
+            { name: "Libhya da Silva Souza Gonçalves Victorino", photo: "libhya.png", room: "Gama", dob: "12/08", phone: "27999733457" },
+            { name: "Alex Gonçalves Victorino", photo: "alex.png", room: "Gama", dob: "20/11", phone: "27999064068" },
+            { name: "Mikaeli Manoel Jacinto Furriel Gonçalves", photo: "mikaeli.png", room: "Gama", dob: "19/01", phone: "27999567965" },
+            { name: "Jackson Jadyvysky", photo: "jackson.png", room: "Ômega", dob: "06/06", phone: "27999575703" },
+            { name: "Luiz Felipe Oliveira dos Santos", photo: "luiz.png", room: "Ômega", dob: "19/11", phone: "27995262281" },
+            { name: "Diego Pimenta", photo: "diego.png", room: "Ômega", dob: "21/05", phone: "27992978778" },
+            { name: "Raiara da Conceição Viana Pimenta", photo: "raiara.png", room: "Ômega", dob: "17/08", phone: "27992896345" },
+            { name: "Brenda Rodrigues de Souza", photo: "brenda.png", room: "Ômega", dob: "20/07", phone: "27992819832" },
+            { name: "JOICE", photo: "joice.png", room: "Ômega", dob: "", phone: "27995215321" },
+            { name: "Brunara dos Santos Alves", photo: "brunara.png", room: "Ômega", dob: "25/04", phone: "27995067124" },
+            { name: "Kauã Guimarães Stein ", photo: "kauan.png", room: "Ômega", dob: "23/12", phone: "27998391140" }
+        ];
+
+        let scheduleData = {};
+        let allDates = [];
+
+        function initScheduleStructure() {
+            Object.keys(roomsData).forEach(key => { scheduleData[key] = { ...roomsData[key], schedules: [] }; });
+        }
+        initScheduleStructure();
+
+        function startFirebaseListener() {
+    const loadingIndicator = document.getElementById('scheduleGrid');
+    if(loadingIndicator) loadingIndicator.innerHTML = '<div style="padding:20px; text-align:center;">⏳ Carregando escalas...</div>';
+
+    db.ref('escalas').on('value', (snapshot) => {
+        const data = snapshot.val();
+        initScheduleStructure();
+        allDates = [];
+
+        if (data) {
+            Object.keys(data).forEach(roomKey => {
+                if (scheduleData[roomKey]) {
+                    scheduleData[roomKey].schedules = data[roomKey] || [];
+                    scheduleData[roomKey].schedules.forEach(item => {
+                        if (!allDates.includes(item.date)) allDates.push(item.date);
+                    });
+                }
+            });
+        }
+
+        // ============================================
+        // SINCRONIZANDO DADOS EXTRAS DO FIREBASE
+        // ============================================
+        db.ref('dados_extras').on('value', snapshot => {
+            const extras = snapshot.val();
+            if(!extras) return;
+
+            // Atualiza Alunos
+            if(extras.alunos) {
+                Object.keys(extras.alunos).forEach(roomKey => {
+                    if(kidsData[roomKey]) {
+                        Object.keys(extras.alunos[roomKey]).forEach(safeName => {
+                            const kidToUpdate = kidsData[roomKey].find(k => k.name.replace(/[.#$[\]]/g, '') === safeName);
+                            if(kidToUpdate) {
+                                const data = extras.alunos[roomKey][safeName];
+                                if(data.dob !== undefined) kidToUpdate.dob = data.dob;
+                                if(data.phone !== undefined) kidToUpdate.phone = data.phone;
+                                if(data.guardian !== undefined) kidToUpdate.guardian = data.guardian;
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Atualiza Professores
+            if(extras.professores) {
+                Object.keys(extras.professores).forEach(safeName => {
+                    const teacherToUpdate = fixedTeachersData.find(t => t.name.replace(/[.#$[\]]/g, '') === safeName);
+                    if(teacherToUpdate) {
+                        const data = extras.professores[safeName];
+                        if(data.dob !== undefined) teacherToUpdate.dob = data.dob;
+                        if(data.phone !== undefined) teacherToUpdate.phone = data.phone;
+                    }
+                });
+            }
+
+            // Recarrega as telas se estiverem ativas
+            if (typeof renderAdminPeople === "function") renderAdminPeople();
+            if (typeof renderBirthdays === "function") renderBirthdays();
+        });
+        
+        // Organiza as datas cronologicamente
+        allDates.sort((a, b) => {
+            const da = a.split('/').reverse().join('');
+            const db = b.split('/').reverse().join('');
+            return da.localeCompare(db);
+        });
+
+        autoSelectCurrentDate();
+        
+        // 1. Gera os botões de data para a aba de Escalas
+        generateDateFilters('date-filters-escala', (d, b) => { 
+            selectedEscalaDate = d;
+            searchTerm = ''; 
+            document.getElementById('teacherSearchInput').value=''; 
+            filterSchedulesByDate(d, b); 
+        }, selectedEscalaDate);
+
+        // 2. Gera os botões de data para a aba de Lições (ISSO RESOLVE O SEU PROBLEMA!)
+        generateDateFilters('date-filters-licoes', (d, b) => { 
+            selectedDateLicoes = d; 
+            togglePill(b); 
+            reloadLessonView(); 
+            checkLessonState(); // Valida se libera o botão de upload
+        }, selectedDateLicoes);
+
+        renderSchedules(); 
+        renderHistory();
+        updateDashboard();
+    });
+}
+
+        function autoSelectCurrentDate() {
+            if (allDates.length === 0) { selectedEscalaDate = null; return; }
+            const today = new Date(); today.setHours(0,0,0,0);
+            const nextDate = allDates.find(d => {
+                const parts = d.split('/');
+                const dateObj = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+                return dateObj >= today;
+            });
+            if (!selectedEscalaDate || !allDates.includes(selectedEscalaDate)) { selectedEscalaDate = nextDate || allDates[allDates.length - 1]; }
+        }
+
+        let selectedRoomKeyChamada = null;
+        let selectedRoomKeyTelao = null;
+        let selectedRoomKeyLicoes = null;
+        let selectedDateLicoes = null;
+        let selectedFiles = [];
+        let searchTerm = '';
+        let currentLessonFiles = []; 
+        let currentAdminTab = 'alunos';
+        let selectedRoomEscala = null;
+        let selectedEscalaDate = null;  
+        let selectedAdminTeacherRoom = null;
+        let selectedAdminStudentRoom = null; 
+        let selectedHistoryType = 'all';
+        let selectedHistoryRoom = null;
+        let selectedHistoryMonth = 'all'; 
+        let isAdminMode = false;
+
+        function getTeacherPhotoUrl(teacherObjOrName) {
+            if (typeof teacherObjOrName === 'object' && teacherObjOrName !== null) {
+                if (teacherObjOrName.photo) return `img/${teacherObjOrName.photo}`;
+                return `https://ui-avatars.com/api/?name=${teacherObjOrName.name}&background=random`;
+            }
+            const teacherFound = fixedTeachersData.find(t => t.name === teacherObjOrName);
+            if (teacherFound && teacherFound.photo) return `img/${teacherFound.photo}`;
+            if (!teacherObjOrName) return '';
+            return `https://ui-avatars.com/api/?name=${teacherObjOrName}&background=random`;
+        }
+
+        function formatDateToInput(dateStr) {
+            if (!dateStr) return '';
+            const [d, m, y] = dateStr.split('/');
+            return `${y}-${m}-${d}`;
+        }
+        function formatDateFromInput(dateInput) {
+            if (!dateInput) return '';
+            const [y, m, d] = dateInput.split('-');
+            return `${d}/${m}/${y}`;
+        }
+        
+        function isSantaCeiaDate(dateStr) {
+            const [d, m, y] = dateStr.split('/').map(Number);
+            const date = new Date(y, m - 1, d);
+            if (date.getDay() !== 0) return false;
+            return d >= 8 && d <= 14;
+        }
+
+        window.onload = () => {
+            startFirebaseListener();
+            
+            const containerEscala = document.getElementById('room-filters-escala');
+            containerEscala.innerHTML = '';
+            const btnAllRooms = document.createElement('button');
+            btnAllRooms.className = 'pill-btn active'; 
+            btnAllRooms.innerText = "Todas as Turmas";
+            btnAllRooms.onclick = () => {
+                containerEscala.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                btnAllRooms.classList.add('active');
+                selectedRoomEscala = null;
+                renderSchedules();
+            };
+            containerEscala.appendChild(btnAllRooms);
+
+            Object.keys(roomsData).forEach(key => {
+                const r = roomsData[key];
+                const btn = document.createElement('button');
+                btn.className = 'pill-btn';
+                btn.innerHTML = `${r.icon} ${r.name}`;
+                btn.onclick = () => {
+                    containerEscala.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedRoomEscala = key;
+                    renderSchedules();
+                };
+                containerEscala.appendChild(btn);
+            });
+
+            generateRoomFilters('room-filters-chamada', selectRoomChamada);
+            generateRoomFilters('room-filters-telao', (k, b) => { selectedRoomKeyTelao = k; togglePill(b); renderTelaoList(); });
+            generateRoomFilters('room-filters-licoes', (k, b) => { selectedRoomKeyLicoes = k; togglePill(b); reloadLessonView(); });
+            
+            generateRoomFilters('room-filters-admin-teachers', (k, b) => {
+                const btns = document.querySelectorAll('#room-filters-admin-teachers .pill-btn');
+                btns.forEach(btnEl => btnEl.classList.remove('active'));
+                if(selectedAdminTeacherRoom === k) { selectedAdminTeacherRoom = null; }
+                else { selectedAdminTeacherRoom = k; b.classList.add('active'); }
+                renderAdminPeople();
+            });
+
+            generateRoomFilters('room-filters-admin-students', (k, b) => {
+                const btns = document.querySelectorAll('#room-filters-admin-students .pill-btn');
+                btns.forEach(btnEl => btnEl.classList.remove('active'));
+                if(selectedAdminStudentRoom === k) { selectedAdminStudentRoom = null; }
+                else { selectedAdminStudentRoom = k; b.classList.add('active'); }
+                renderAdminPeople();
+            });
+
+            generateRoomFilters('room-filters-history', (k, b) => {
+                const btns = document.querySelectorAll('#room-filters-history .pill-btn');
+                btns.forEach(btnEl => btnEl.classList.remove('active'));
+                if(selectedHistoryRoom === k) { selectedHistoryRoom = null; }
+                else { selectedHistoryRoom = k; b.classList.add('active'); }
+                renderHistory();
+            });
+
+            generateMonthFilters('month-filters-history', (val) => { selectedHistoryMonth = val; renderHistory(); });
+
+            const selectRoom = document.getElementById('modalRoomSelect');
+            Object.keys(roomsData).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.innerText = roomsData[key].name;
+                selectRoom.appendChild(opt);
+            });
+
+            document.getElementById('dateInput').valueAsDate = new Date();
+            updateDashboard();
+            renderAdminPeople();
+            renderBirthdays();
+        };
+
+        function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+
+        function showSection(id, btn) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.remove('hidden');
+            if(btn) btn.classList.add('active');
+            if(window.innerWidth <= 768) toggleMenu();
+        }
+
+        function updateDashboard() {
+            let total = 0;
+            if (kidsData) Object.values(kidsData).forEach(arr => total += arr.length);
+            document.getElementById('total-kids-count').innerText = total;
+            document.getElementById('total-teachers-count').innerText = fixedTeachersData ? fixedTeachersData.length : 0;
+            
+            const today = new Date(); today.setHours(0,0,0,0);
+            let nextDateStr = "--/--";
+            
+            if (allDates && allDates.length > 0) {
+                 const found = allDates.find(d => {
+                    const parts = d.split('/');
+                    const dateObj = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+                    return dateObj >= today;
+                });
+                if (found) nextDateStr = found.substr(0, 5);
+            }
+            document.getElementById('next-sunday-date').innerText = nextDateStr;
+        }
+        
+        function renderBirthdays() {
+            const listStudents = document.getElementById('birthdays-students-list');
+            const listTeachers = document.getElementById('birthdays-teachers-list');
+            listStudents.innerHTML = ''; listTeachers.innerHTML = '';
+            
+            const today = new Date(); const currentMonth = today.getMonth();
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            
+            const upcomingStudents = [];
+            Object.values(kidsData).forEach(room => {
+                room.forEach(kid => {
+                    if(kid.dob) {
+                        const parts = kid.dob.split('-');
+                        const birthMonth = parseInt(parts[1]) - 1; const birthDay = parseInt(parts[2]);
+                        if(birthMonth === currentMonth) upcomingStudents.push({...kid, day: birthDay});
+                    }
+                });
+            });
+            upcomingStudents.sort((a,b) => a.day - b.day);
+
+            if(upcomingStudents.length === 0) listStudents.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:10px;">Nenhum aluno aniversariante em ' + monthNames[currentMonth] + '</div>';
+            else {
+                upcomingStudents.forEach(kid => {
+                    const img = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+                    const div = document.createElement('div'); div.className = 'birthday-card';
+                    div.innerHTML = `<div class="birthday-day"><span>DIA</span><strong>${kid.day}</strong></div><img src="${img}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'"><div style="flex:1;"><div style="font-weight:800; color:var(--text-main);">${kid.name}</div><div style="font-size:0.8rem; color:var(--text-muted);">🎂 Parabéns!</div></div><button class="btn-wa-mini" onclick="window.open('https://wa.me/55${kid.phone}?text=Parabéns ${kid.name}! O Ministério Kids ama você! 🎉')"><i class="fab fa-whatsapp"></i></button>`;
+                    listStudents.appendChild(div);
+                });
+            }
+
+            const upcomingTeachers = [];
+            fixedTeachersData.forEach(t => {
+                if(t.dob) {
+                    let birthMonth, birthDay;
+                    if (t.dob.includes('/')) {
+                        const parts = t.dob.split('/'); birthDay = parseInt(parts[0]); birthMonth = parseInt(parts[1]) - 1;
+                    } else {
+                        const parts = t.dob.split('-'); birthDay = parseInt(parts[2]); birthMonth = parseInt(parts[1]) - 1;
+                    }
+                    if(birthMonth === currentMonth) upcomingTeachers.push({...t, day: birthDay});
+                }
+            });
+            upcomingTeachers.sort((a,b) => a.day - b.day);
+
+            if(upcomingTeachers.length === 0) listTeachers.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:10px;">Nenhum professor aniversariante em ' + monthNames[currentMonth] + '</div>';
+            else {
+                upcomingTeachers.forEach(t => {
+                    const img = getTeacherPhotoUrl(t);
+                    const div = document.createElement('div'); div.className = 'birthday-card';
+                    div.innerHTML = `<div class="birthday-day"><span>DIA</span><strong>${t.day}</strong></div><img src="${img}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=${t.name}&background=random'"><div style="flex:1;"><div style="font-weight:800; color:var(--text-main);">${t.name}</div><div style="font-size:0.8rem; color:var(--text-muted);">🎂 Parabéns Professor(a)!</div></div><button class="btn-wa-mini" onclick="window.open('https://wa.me/55${t.phone}?text=Parabéns ${t.name}! Gratidão pela sua vida e dedicação! 🎉')"><i class="fab fa-whatsapp"></i></button>`;
+                    listTeachers.appendChild(div);
+                });
+            }
+        }
+
+        function generateRoomFilters(containerId, callback) {
+            const container = document.getElementById(containerId); container.innerHTML = '';
+            Object.keys(roomsData).forEach(key => {
+                const r = roomsData[key];
+                const btn = document.createElement('button'); btn.className = 'pill-btn'; btn.innerHTML = `${r.icon} ${r.name}`;
+                btn.onclick = () => {
+                    if (!containerId.includes('escala') && !containerId.includes('admin') && !containerId.includes('history')) {
+                        container.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+                    }
+                    callback(key, btn);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function generateMonthFilters(containerId, callback) {
+            const container = document.getElementById(containerId); container.innerHTML = '';
+            const months = [ { name: "Todos", val: "all" }, { name: "Jan", val: "01" }, { name: "Fev", val: "02" }, { name: "Mar", val: "03" }, { name: "Abr", val: "04" }, { name: "Mai", val: "05" }, { name: "Jun", val: "06" }, { name: "Jul", val: "07" }, { name: "Ago", val: "08" }, { name: "Set", val: "09" }, { name: "Out", val: "10" }, { name: "Nov", val: "11" }, { name: "Dez", val: "12" } ];
+            months.forEach((m, index) => {
+                const btn = document.createElement('button'); btn.className = 'pill-btn'; if (index === 0) btn.classList.add('active');
+                btn.innerText = m.name;
+                btn.onclick = () => { const parent = btn.parentNode; parent.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); callback(m.val); };
+                container.appendChild(btn);
+            });
+        }
+
+        function togglePill(btn) {
+            const parent = btn.parentNode; parent.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+        }
+
+        // ============================================
+        // CHAMADA VISUAL (FIREBASE)
+        // ============================================
+        function selectRoomChamada(key) {
+             selectedRoomKeyChamada = key;
+            const grid = document.getElementById('kidsList'); grid.innerHTML = '';
+            const kids = kidsData[key] || [];
+            if(kids.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center">Sem alunos cadastrados</div>'; return; }
+
+            kids.forEach(kid => {
+                const div = document.createElement('div'); div.className = 'kid-card'; div.dataset.name = kid.name;
+                div.onclick = function() { this.classList.toggle('present'); checkCallFormValidity(); };
+                const imgSrc = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+                div.innerHTML = `<img src="${imgSrc}" class="kid-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'"><div class="kid-name">${kid.name}</div>`;
+                grid.appendChild(div);
+            });
+            checkCallFormValidity();
+        }
+
+        function addExtraKid() {
+            const name = document.getElementById('extraKidName').value;
+            if(!name) return;
+            const grid = document.getElementById('kidsList');
+            const div = document.createElement('div'); div.className = 'kid-card present'; div.dataset.name = name + " (Visitante)";
+            div.innerHTML = `<div class="kid-img" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:#fef3c7;color:#d97706;">✨</div><div class="kid-name">${name}<br><small>(Extra)</small></div>`;
+            div.onclick = function() { if(confirm('Remover visitante?')) this.remove(); checkCallFormValidity(); };
+            grid.appendChild(div); document.getElementById('extraKidName').value = ''; checkCallFormValidity();
+        }
+
+        function checkCallFormValidity() {
+            const tName = document.getElementById('teacherName').value; const dt = document.getElementById('dateInput').value; const hasRoom = selectedRoomKeyChamada !== null;
+            document.getElementById('btn-submit-chamada').disabled = !(tName && dt && hasRoom);
+        }
+        
+        async function submitCall() {
+            const btn = document.getElementById('btn-submit-chamada');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; btn.disabled = true;
+            
+            const room = roomsData[selectedRoomKeyChamada];
+            const presentNames = Array.from(document.querySelectorAll('.kid-card.present')).map(el => el.dataset.name);
+            const dateVal = document.getElementById('dateInput').value;
+            const teacherVal = document.getElementById('teacherName').value;
+            const dateFormatted = formatDateFromInput(dateVal);
+
+            const chamadaData = {
+                room_name: room.name, room_key: selectedRoomKeyChamada,
+                lesson_date: dateFormatted, teacher_name: teacherVal,
+                kids_list: presentNames.join('; '), timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            try { 
+                await db.ref('chamadas').push(chamadaData);
+                alert(`✅ Chamada registrada no sistema!`); 
+                document.querySelectorAll('.kid-card').forEach(c => c.classList.remove('present')); 
+                document.getElementById('teacherName').value = ''; 
+                document.getElementById('extraKidName').value = '';
+                checkCallFormValidity();
+            } catch(e) { 
+                alert("Erro ao enviar chamada."); console.error(e);
+            }
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Chamada'; btn.disabled = false;
+        }
+
+        // ============================================
+        // VER HISTÓRICO DE CHAMADAS
+        // ============================================
+        let allChamadasData = [];
+
+        function openChamadaHistory() {
+            document.getElementById('chamadaHistoryModal').classList.add('active');
+            const container = document.getElementById('chamadaHistoryContainer');
+            container.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+
+            db.ref('chamadas').orderByChild('timestamp').once('value', snapshot => {
+                allChamadasData = [];
+                snapshot.forEach(child => { allChamadasData.push({ id: child.key, ...child.val() }); });
+                allChamadasData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Mais recente 1º
+                renderChamadaHistory();
+            });
+        }
+
+        function closeChamadaHistory() { document.getElementById('chamadaHistoryModal').classList.remove('active'); }
+
+        function renderChamadaHistory() {
+            const container = document.getElementById('chamadaHistoryContainer');
+            container.innerHTML = '';
+            if (allChamadasData.length === 0) { container.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">Nenhuma chamada registrada.</div>'; return; }
+
+            allChamadasData.forEach(item => {
+                const div = document.createElement('div'); div.className = 'history-card';
+                div.innerHTML = `
+                    <div class="history-header">
+                        <span class="history-date">${item.lesson_date}</span>
+                        <span class="history-room" style="background: var(--primary); color: white; border: none;">${item.room_name}</span>
+                    </div>
+                    <div style="font-size:0.85rem; margin-bottom: 5px;"><strong>Professores:</strong> ${item.teacher_name}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);"><strong>Presentes:</strong> ${item.kids_list || 'Nenhum'}</div>
+                    <div style="margin-top: 10px; text-align: right; border-top: 1px solid #e2e8f0; padding-top: 8px;">
+                         <button class="btn-del-sm" onclick="deleteChamada('${item.id}')"><i class="fas fa-trash"></i> Apagar Registro</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function deleteChamada(id) {
+            if(confirm("Deseja realmente apagar este registro de chamada do banco de dados?")) {
+                db.ref('chamadas/' + id).remove().then(() => {
+                    allChamadasData = allChamadasData.filter(c => c.id !== id); renderChamadaHistory();
+                });
+            }
+        }
+
+        function exportChamadaCSV() {
+            if (allChamadasData.length === 0) { alert("Nenhum dado para exportar."); return; }
+            let csvContent = "\uFEFFDATA;TURMA;PROFESSORES;ALUNOS PRESENTES\n";
+            allChamadasData.forEach(c => {
+                let date = c.lesson_date || ""; let room = c.room_name || "";
+                let teacher = (c.teacher_name || "").replace(/;/g, '').replace(/,/g, '');
+                let kids = (c.kids_list || "").replace(/;/g, ',').replace(/\n/g, ' '); 
+                csvContent += `${date};${room};${teacher};${kids}\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url);
+            link.setAttribute("download", "Historico_Chamadas.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        // ============================================
+        // TELÃO E RESTANTE DO SISTEMA
+        // ============================================
+        function renderTelaoList() {
+            const container = document.getElementById('telaoList'); container.innerHTML = '';
+            const search = document.getElementById('searchTelao').value.toLowerCase(); let listToRender = [];
+            if (selectedRoomKeyTelao) { listToRender = (kidsData[selectedRoomKeyTelao] || []).map(k => ({...k, roomName: roomsData[selectedRoomKeyTelao].name})); } 
+            else { Object.keys(kidsData).forEach(key => { kidsData[key].forEach(k => { listToRender.push({...k, roomName: roomsData[key].name}); }); }); }
+            if (!search && !selectedRoomKeyTelao) { container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#9ca3af; padding:10px;">Selecione uma sala ou use a busca.</div>'; return; }
+            let found = false;
+            listToRender.forEach(kid => {
+                if (search && !kid.name.toLowerCase().includes(search)) return;
+                found = true; const img = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+                const div = document.createElement('div'); div.className = 'person-card'; div.style.cursor = 'pointer'; div.onclick = () => sendAlertToTelao(kid.name, kid.roomName, img);
+                div.innerHTML = `<img src="${img}" class="person-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'"><div class="person-info"><h4 style="font-size:1.1rem;">${kid.name}</h4><p style="color:var(--primary); font-weight:800;">${kid.roomName}</p></div><div class="person-actions"><button class="btn btn-primary" style="width:auto; padding:8px 15px; border-radius:50px;"><i class="fas fa-bullhorn"></i></button></div>`;
+                container.appendChild(div);
+            });
+            if(!found) container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#9ca3af;">Nenhuma criança encontrada</div>';
+        }
+        
+        async function sendAlertToTelao(name, room, photo) {
+            if(!confirm(`Deseja chamar os pais de ${name} no telão?`)) return;
+            const alertData = { kidName: name, roomName: room, photoUrl: photo, timestamp: firebase.database.ServerValue.TIMESTAMP };
+            db.ref('chamados').push(alertData).then(() => alert(`📢 Enviado: ${name}`)).catch(e => alert("Erro ao enviar."));
+        }
+
+        function generateDateFilters(containerId, callback, currentSelectedDate) {
+            const container = document.getElementById(containerId); 
+            if(!container) return;
+            container.innerHTML = '';
+            
+            allDates.forEach(date => { 
+                const btn = document.createElement('button'); 
+                btn.className = 'pill-btn'; 
+                if (currentSelectedDate === date) btn.classList.add('active');
+                btn.innerText = date.substr(0,5); 
+                btn.onclick = () => { callback(date, btn); }; 
+                container.appendChild(btn); 
+            });
+        }
+        
+        function renderSchedules() {
+            const container = document.getElementById('scheduleGrid'); container.innerHTML = '';
+            if (isAdminMode) container.classList.add('admin-mode'); let hasItems = false;
+
+            Object.keys(scheduleData).forEach(roomKey => {
+                if (selectedRoomEscala && roomKey !== selectedRoomEscala) return;
+                const room = scheduleData[roomKey];
+                const sortedSchedules = [...room.schedules].sort((a,b) => { const da = a.date.split('/').reverse().join(''); const db = b.date.split('/').reverse().join(''); return da.localeCompare(db); });
+
+                sortedSchedules.forEach((sc, index) => {
+                    if (selectedEscalaDate !== null && sc.date !== selectedEscalaDate) return;
+                    if (searchTerm && !sc.teachers.some(t => t.toUpperCase().includes(searchTerm.toUpperCase()))) return;
+                    
+                    hasItems = true; const div = document.createElement('div'); const isSantaCeia = isSantaCeiaDate(sc.date);
+                    div.className = `schedule-item ${isSantaCeia ? 'santa-ceia' : ''}`; if(isAdminMode) div.classList.add('admin-mode');
+                    const teachersHtml = sc.teachers.map(t => `<div class="teacher-chip"><img src="${getTeacherPhotoUrl(t)}" class="teacher-img" onerror="this.src='https://ui-avatars.com/api/?name=${t}&background=random&color=fff&size=40'"><span class="teacher-name">${t}</span></div>`).join('');
+                    const santaCeiaBadge = isSantaCeia ? '<span class="badge-ceia">CEIA</span>' : ''; const realIndex = room.schedules.indexOf(sc);
+                    div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-weight:800; color:var(--text-main); display:flex; gap:8px; align-items:center;">${room.icon} ${room.name}</span><span class="date-badge-style" style="background:#e0e7ff; color:var(--primary); padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:700;">${sc.date}${santaCeiaBadge}</span></div><div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">Lição: <strong>${sc.lesson}</strong></div><div class="teachers-container">${teachersHtml}</div><div class="schedule-actions"><button class="btn-edit-sm" onclick="openEditScheduleModal('${roomKey}', ${realIndex})"><i class="fas fa-user-edit"></i> Editar / Trocar</button><button class="btn-del-sm" onclick="deleteScheduleItem('${roomKey}', ${realIndex})"><i class="fas fa-trash"></i></button></div>`;
+                    container.appendChild(div);
+                });
+            });
+            if(!hasItems) { container.innerHTML = '<div style="text-align:center; padding:30px; color:#aaa;">Nenhuma escala encontrada.</div>'; }
+        }
+
+        function filterByTeacher(val) { searchTerm = val.trim(); renderSchedules(); }
+        function filterSchedulesByDate(date, btn) { togglePill(btn); renderSchedules(); }
+        
+        function copyScheduleToClipboard() {
+            let text = "*📅 ESCALA KIDS*\n\n";
+            Object.keys(scheduleData).forEach(key => {
+                const room = scheduleData[key]; if (selectedRoomEscala && selectedRoomEscala !== key) return;
+                const currentSchedules = room.schedules.filter(s => s.date === selectedEscalaDate);
+                if(currentSchedules.length > 0) {
+                    text += `*${room.icon} ${room.name.toUpperCase()}*\n`;
+                    currentSchedules.forEach(sc => { const obs = isSantaCeiaDate(sc.date) ? " (Santa Ceia 🍷)" : ""; text += `🗓️ ${sc.date}: ${sc.teachers.join(', ')}${obs}\n`; });
+                    text += "\n";
+                }
+            });
+            navigator.clipboard.writeText(text).then(() => { alert("📋 Escala copiada com sucesso!"); });
+        }
+
+        function openPasswordModal() { if (isAdminMode) return; document.getElementById('passwordModal').classList.add('active'); document.getElementById('adminPasswordInput').value = ''; }
+        function closePasswordModal() { document.getElementById('passwordModal').classList.remove('active'); }
+        function addPassNum(num) { const input = document.getElementById('adminPasswordInput'); if(input.value.length < 4) input.value += num; if(input.value.length === 4) setTimeout(() => { checkAdminPassword(); }, 300); }
+        function clearPass() { document.getElementById('adminPasswordInput').value = ''; }
+        function backspacePass() { const input = document.getElementById('adminPasswordInput'); input.value = input.value.slice(0, -1); }
+        function checkAdminPassword() {
+            const pass = document.getElementById('adminPasswordInput').value;
+            if (pass === '1234') {
+                isAdminMode = true; closePasswordModal(); 
+                document.getElementById('adminSchedulePanel').classList.remove('hidden'); 
+                document.getElementById('adminLessonControls').classList.remove('hidden'); 
+                document.getElementById('lessonUnlockBtn').classList.add('hidden'); 
+                
+                // Atualiza telas para liberar as canetas de edição
+                renderSchedules();
+                renderAdminPeople(); 
+            } else { 
+                alert("❌ Senha incorreta!"); clearPass(); 
+            }
+        }
+
+        function openNewScheduleModal() { document.getElementById('modalFormTitle').innerText = "➕ Criar Nova Escala"; document.getElementById('formMode').value = "create"; document.getElementById('modalRoomSelect').value = ""; document.getElementById('modalRoomSelect').disabled = false; document.getElementById('modalDate').value = ""; document.getElementById('modalLesson').value = ""; document.getElementById('teacherSelectionList').innerHTML = '<div style="padding:15px; text-align:center; color:#aaa;">Selecione uma sala primeiro.</div>'; document.getElementById('scheduleFormModal').classList.add('active'); }
+        function openEditScheduleModal(roomKey, index) { document.getElementById('modalFormTitle').innerText = "✏️ Trocar / Editar Escala"; document.getElementById('formMode').value = "edit"; const item = scheduleData[roomKey].schedules[index]; document.getElementById('modalRoomSelect').value = roomKey; document.getElementById('modalRoomSelect').disabled = true; document.getElementById('editRoomKey').value = roomKey; document.getElementById('editIndex').value = index; document.getElementById('modalDate').value = formatDateToInput(item.date); document.getElementById('modalLesson').value = item.lesson; renderTeacherSelectionList(item.teachers, roomsData[roomKey].name); document.getElementById('scheduleFormModal').classList.add('active'); }
+        function closeScheduleFormModal() { document.getElementById('scheduleFormModal').classList.remove('active'); }
+
+        function updateTeacherListByRoomSelect() { const roomKey = document.getElementById('modalRoomSelect').value; if(!roomKey) return; renderTeacherSelectionList([], roomsData[roomKey].name); }
+
+        function renderTeacherSelectionList(selectedTeachers = [], filterRoomName = null) {
+            const container = document.getElementById('teacherSelectionList'); container.innerHTML = '';
+            const sortedTeachers = [...fixedTeachersData].sort((a,b) => a.name.localeCompare(b.name));
+            sortedTeachers.forEach(t => {
+                if (filterRoomName && t.room !== filterRoomName && !selectedTeachers.includes(t.name)) return;
+                const isChecked = selectedTeachers.includes(t.name) ? 'checked' : ''; const label = document.createElement('label'); label.className = 'teacher-select-item'; label.innerHTML = `<input type="checkbox" class="chk-teacher" value="${t.name}" ${isChecked}><img src="${getTeacherPhotoUrl(t)}" onerror="this.src='https://ui-avatars.com/api/?name=${t.name}&background=random'"><span style="color:var(--text-main);">${t.name}</span><small>${t.room || 'Geral'}</small>`; container.appendChild(label);
+            });
+        }
+
+        function saveScheduleForm() {
+            const mode = document.getElementById('formMode').value; const roomKey = document.getElementById('modalRoomSelect').value; const rawDate = document.getElementById('modalDate').value; const teachersArr = Array.from(document.querySelectorAll('.chk-teacher:checked')).map(cb => cb.value);
+            if (!roomKey || !rawDate) return alert("Preencha os campos!");
+            const dateFormatted = formatDateFromInput(rawDate); const scheduleItem = { date: dateFormatted, lesson: document.getElementById('modalLesson').value || "LIVRE", teachers: teachersArr };
+            let currentSchedules = scheduleData[roomKey].schedules || [];
+            if (mode === 'create') currentSchedules.push(scheduleItem); else currentSchedules[parseInt(document.getElementById('editIndex').value)] = scheduleItem;
+            db.ref(`escalas/${roomKey}`).set(currentSchedules).then(() => closeScheduleFormModal()).catch(e => alert("Erro: " + e.message));
+        }
+
+        function deleteScheduleItem(roomKey, index) {
+            if(confirm("Deseja apagar?")) { let currentSchedules = scheduleData[roomKey].schedules || []; currentSchedules.splice(index, 1); db.ref(`escalas/${roomKey}`).set(currentSchedules); }
+        }
+
+        function setHistoryType(type, btn) { selectedHistoryType = type; togglePill(btn); renderHistory(); }
+        function renderHistory() {
+            const container = document.getElementById('historyGrid'); container.innerHTML = ''; let allSchedules = [];
+            Object.keys(scheduleData).forEach(key => { scheduleData[key].schedules.forEach(s => { allSchedules.push({ ...s, roomName: roomsData[key].name, roomKey: key }); }); });
+            allSchedules.sort((a,b) => b.date.split('/').reverse().join('').localeCompare(a.date.split('/').reverse().join('')));
+            allSchedules.forEach(item => {
+                const [d, m, y] = item.date.split('/');
+                if (selectedHistoryType === 'ceia' && !isSantaCeiaDate(item.date)) return;
+                if (selectedHistoryRoom && item.roomKey !== selectedHistoryRoom) return;
+                if (selectedHistoryMonth !== 'all' && m !== selectedHistoryMonth) return;
+                const div = document.createElement('div'); div.className = `history-card ${isSantaCeiaDate(item.date) ? 'ceia' : ''}`;
+                div.innerHTML = `<div class="history-header"><span class="history-date">${item.date}</span><span class="history-room">${item.roomName}</span></div><div style="font-size:0.85rem;">Tema: ${item.lesson}</div><div style="font-size:0.8rem; color:var(--text-muted);">${item.teachers.join(', ')}</div>`;
+                container.appendChild(div);
+            });
+        }
+
+        // ============================================
+        // LIÇÕES (PERMANECE NO GOOGLE SHEETS)
+        // ============================================
+        function handleFileSelect() { selectedFiles = Array.from(document.getElementById('pdfFile').files); document.getElementById('fileInfo').textContent = selectedFiles.length > 0 ? `✅ ${selectedFiles.length} arquivo(s)` : ""; checkLessonState(); }
+        function checkLessonState() { document.getElementById('btnUploadLesson').disabled = !(selectedRoomKeyLicoes && selectedDateLicoes && selectedFiles.length > 0); document.getElementById('btnDownloadLesson').disabled = currentLessonFiles.length === 0; document.getElementById('btnDeleteLesson').disabled = currentLessonFiles.length === 0; }
+        async function reloadLessonView() {
+            if(!selectedRoomKeyLicoes || !selectedDateLicoes) return;
+            const url = new URL(SHEET_URL); url.searchParams.append('action', 'checkLesson'); url.searchParams.append('room_name', roomsData[selectedRoomKeyLicoes].name); url.searchParams.append('lesson_date', selectedDateLicoes);
+            try { const response = await fetch(url.toString()); const data = await response.json();
+                if (data.status === 'found') {
+                    currentLessonFiles = data.files; const f = currentLessonFiles[0];
+                    let fileUrl = f.fileType === 'pdf' ? `https://drive.google.com/file/d/${f.fileId}/preview` : `https://drive.google.com/uc?id=${f.fileId}&export=view`;
+                    document.getElementById('pdfViewerContent').innerHTML = f.fileType === 'pdf' ? `<iframe src="${fileUrl}" style="width:100%; height:400px; border:none; border-radius:10px;"></iframe>` : `<img src="${fileUrl}" style="max-width:100%; border-radius:10px;">`;
+                } else { currentLessonFiles = []; document.getElementById('pdfViewerContent').innerHTML = '<span>Nenhum arquivo.</span>'; }
+            } catch(e) { } checkLessonState();
+        }
+        async function uploadLesson() {
+            const filesToSend = []; 
+            for (const file of selectedFiles) { const base64 = await new Promise(r => { const rd = new FileReader(); rd.onload = e => r(e.target.result.split(',')[1]); rd.readAsDataURL(file); }); filesToSend.push({ file_name: file.name, file_type: file.type.includes('pdf') ? 'pdf' : 'jpg', file_base64: base64 }); }
+            try { await fetch(SHEET_URL, { method: 'POST', mode: 'cors', body: JSON.stringify({ action: 'uploadLessons', room_name: roomsData[selectedRoomKeyLicoes].name, lesson_date: selectedDateLicoes, files: filesToSend }) }); alert("OK!"); reloadLessonView(); } catch(e) { }
+        }
+        function downloadLesson() { currentLessonFiles.forEach(f => window.open(`https://drive.google.com/uc?export=download&id=${f.fileId}`)); }
+        async function deleteLesson() { if(!confirm("Apagar?")) return; await fetch(SHEET_URL, { method:'POST', mode:'cors', body: JSON.stringify({ action: 'deleteLesson', room_name: roomsData[selectedRoomKeyLicoes].name, lesson_date: selectedDateLicoes }) }); reloadLessonView(); }
+        
+        function toggleAdminTab(tab, btn) { 
+            currentAdminTab = tab; togglePill(btn); document.getElementById('studentFields').classList.toggle('hidden', tab !== 'alunos'); document.getElementById('teacherFields').classList.toggle('hidden', tab === 'alunos'); document.getElementById('adminTeacherRoomFilter').classList.toggle('hidden', tab === 'alunos'); document.getElementById('adminStudentRoomFilter').classList.toggle('hidden', tab !== 'alunos'); renderAdminPeople(); 
+        }
+        function toggleNewForm() { document.getElementById('adminFormContainer').classList.toggle('hidden'); }
+        function filterAdminList() { renderAdminPeople(); }
+        // Função auxiliar para calcular a idade a partir da Data de Nascimento
+        function calculateAge(dob) {
+            if (!dob) return '';
+            let y, m, d;
+            if (dob.includes('/')) { [d, m, y] = dob.split('/'); } else { [y, m, d] = dob.split('-'); }
+            if (!y || !m || !d) return '';
+            const birthDate = new Date(y, m - 1, d);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const mDiff = today.getMonth() - birthDate.getMonth();
+            if (mDiff < 0 || (mDiff === 0 && today.getDate() < birthDate.getDate())) { age--; }
+            return age + ' anos';
+        }
+
+        // Função corrigida para renderizar a lista de Pessoas
+        function renderAdminPeople() {
+            const container = document.getElementById('adminListContainer'); 
+            container.innerHTML = ''; 
+            const search = document.getElementById('adminSearch').value.toLowerCase();
+            
+            if (currentAdminTab === 'alunos') {
+                Object.keys(kidsData).forEach(rk => {
+                    if (selectedAdminStudentRoom && rk !== selectedAdminStudentRoom) return;
+                    
+                    kidsData[rk].forEach(k => {
+                        if (search && !k.name.toLowerCase().includes(search)) return;
+                        
+                        let ageInfo = k.dob ? `<p><i class="fas fa-birthday-cake" style="color:var(--secondary);"></i> ${calculateAge(k.dob)}</p>` : '';
+                        let guardianInfo = k.guardian ? `<p><i class="fas fa-user-friends" style="color:var(--primary);"></i> Resp: ${k.guardian}</p>` : '';
+                        let phoneInfo = k.phone ? `<p><i class="fas fa-phone-alt" style="color:var(--text-muted);"></i> ${k.phone}</p>` : '';
+
+                        let waButton = k.phone ? `<button class="btn-wa-mini" onclick="window.open('https://wa.me/55${k.phone.replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i></button>` : '';
+                        
+                        // Cadeado ou Caneta
+                        let editButton = `<button class="btn-edit-mini" onclick="openEditPersonModal('aluno', '${rk}', '${k.name}')"><i class="fas fa-pen"></i></button>`;
+                        if (!isAdminMode) {
+                            editButton = `<button class="btn-edit-mini" onclick="openPasswordModal()"><i class="fas fa-lock"></i></button>`;
+                        }
+
+                        const imgSrc = k.photo.startsWith('http') ? k.photo : `img/${k.photo}`;
+                        const div = document.createElement('div'); 
+                        div.className = 'person-card';
+                        
+                        div.innerHTML = `
+                            <img src="${imgSrc}" class="person-img" onerror="this.src='https://ui-avatars.com/api/?name=${k.name}&background=random'">
+                            <div class="person-info">
+                                <div style="display:flex; align-items:center; gap:10px; margin-bottom: 5px;">
+                                    <h4>${k.name}</h4>
+                                    <span class="room-tag" style="background:#eef2ff; color:var(--primary); margin:0;">${roomsData[rk].name}</span>
+                                </div>
+                                ${guardianInfo}
+                                ${phoneInfo}
+                                ${ageInfo}
+                            </div>
+                            <div class="action-buttons-group">
+                                ${waButton}
+                                ${editButton}
+                            </div>
+                        `; 
+                        container.appendChild(div);
+                    });
+                });
+            } else {
+                fixedTeachersData.forEach(t => {
+                    if (search && !t.name.toLowerCase().includes(search)) return; 
+                    if (selectedAdminTeacherRoom && roomsData[selectedAdminTeacherRoom].name !== t.room) return;
+                    
+                    let phoneInfo = t.phone ? `<p><i class="fas fa-phone-alt" style="color:var(--text-muted);"></i> ${t.phone}</p>` : '';
+                    let dobInfo = t.dob ? `<p><i class="fas fa-birthday-cake" style="color:var(--secondary);"></i> Niver: ${t.dob}</p>` : '';
+                    
+                    let waButton = t.phone ? `<button class="btn-wa-mini" onclick="window.open('https://wa.me/55${t.phone.replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i></button>` : '';
+                    
+                    // Cadeado ou Caneta
+                    let editButton = `<button class="btn-edit-mini" onclick="openEditPersonModal('professor', 'geral', '${t.name}')"><i class="fas fa-pen"></i></button>`;
+                    if (!isAdminMode) {
+                        editButton = `<button class="btn-edit-mini" onclick="openPasswordModal()"><i class="fas fa-lock"></i></button>`;
+                    }
+
+                    const div = document.createElement('div'); 
+                    div.className = 'person-card'; 
+                    div.innerHTML = `
+                        <img src="${getTeacherPhotoUrl(t)}" class="person-img" onerror="this.src='https://ui-avatars.com/api/?name=${t.name}&background=random'">
+                        <div class="person-info">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom: 5px;">
+                                <h4>${t.name}</h4>
+                                <span class="room-tag" style="background:#eef2ff; color:var(--primary); margin:0;">${t.room || 'Geral'}</span>
+                            </div>
+                            ${phoneInfo}
+                            ${dobInfo}
+                        </div>
+                        <div class="action-buttons-group">
+                            ${waButton}
+                            ${editButton}
+                        </div>
+                    `; 
+                    container.appendChild(div);
+                });
+            }
+        }
+
+        // Funções do Modal de Edição (Somente Admin)
+        function openEditPersonModal(type, room, name) {
+            if(!isAdminMode) { openPasswordModal(); return; }
+            
+            document.getElementById('editPersonType').value = type;
+            document.getElementById('editPersonRoom').value = room;
+            document.getElementById('editPersonOriginalName').value = name;
+            document.getElementById('editPersonName').innerText = name;
+
+            document.getElementById('editPersonStudentFields').style.display = (type === 'aluno') ? 'block' : 'none';
+
+            let existingData = null;
+            if(type === 'aluno') {
+                existingData = kidsData[room].find(k => k.name === name);
+            } else {
+                existingData = fixedTeachersData.find(t => t.name === name);
+            }
+
+            let dobValue = existingData.dob || '';
+            if(dobValue.includes('/')) {
+                const p = dobValue.split('/');
+                if(p.length===3) dobValue = `${p[2]}-${p[1]}-${p[0]}`;
+            }
+
+            document.getElementById('editPersonDob').value = dobValue;
+            document.getElementById('editPersonPhone').value = existingData.phone || '';
+            if(type === 'aluno') {
+                document.getElementById('editPersonGuardian').value = existingData.guardian || '';
+            }
+
+            document.getElementById('editPersonModal').classList.add('active');
+        }
+
+        function closeEditPersonModal() {
+            document.getElementById('editPersonModal').classList.remove('active');
+        }
+
+        function savePersonEdit() {
+            const type = document.getElementById('editPersonType').value;
+            const room = document.getElementById('editPersonRoom').value;
+            const name = document.getElementById('editPersonOriginalName').value;
+            
+            const dob = document.getElementById('editPersonDob').value;
+            const phone = document.getElementById('editPersonPhone').value;
+            const guardian = document.getElementById('editPersonGuardian').value;
+
+            // Retira caracteres proibidos pelo Firebase
+            const safeName = name.replace(/[.#$[\]]/g, ''); 
+            const nodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeName}` : `dados_extras/professores/${safeName}`;
+
+            const payload = { dob, phone };
+            if(type === 'aluno') payload.guardian = guardian;
+
+            db.ref(nodePath).update(payload).then(() => {
+                closeEditPersonModal();
+                alert("✅ Dados salvos com sucesso!");
+            }).catch(e => alert("Erro ao salvar: " + e.message));
+        }
+        async function submitRegistration() { alert("Cadastro realizado (Simulação)"); toggleNewForm(); }
+
+        // ============================================
+        // SISTEMA: IMERSÃO BÍBLICA (PAINEL ADMIN)
+        // ============================================
+        let imersaoDataAdmin = {};
+        let selectedImersaoAdminRoom = null; 
+
+        db.ref('imersao_biblica_scores').on('value', snapshot => { imersaoDataAdmin = snapshot.val() || {}; renderImersaoAdmin(); });
+
+        function generateRoomFiltersImersao() {
+            const container = document.getElementById('room-filters-imersao'); if(!container) return; container.innerHTML = '';
+            const btnTodos = document.createElement('button'); btnTodos.className = 'pill-btn active'; btnTodos.innerText = 'Todas';
+            btnTodos.onclick = () => { container.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active')); btnTodos.classList.add('active'); selectedImersaoAdminRoom = null; renderImersaoAdmin(); }; container.appendChild(btnTodos);
+            Object.keys(roomsData).forEach(key => {
+                const r = roomsData[key]; const btn = document.createElement('button'); btn.className = 'pill-btn'; btn.innerHTML = `${r.icon} ${r.name}`;
+                btn.onclick = () => { container.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); selectedImersaoAdminRoom = key; renderImersaoAdmin(); }; container.appendChild(btn);
+            });
+        }
+
+        setTimeout(generateRoomFiltersImersao, 1000); 
+
+        function renderImersaoAdmin() {
+            const container = document.getElementById('imersaoAdminGrid'); if(!container) return; container.innerHTML = '';
+            let allKidsImersao = [];
+            Object.keys(kidsData).forEach(roomKey => {
+                if (selectedImersaoAdminRoom && roomKey !== selectedImersaoAdminRoom) return; 
+                kidsData[roomKey].forEach((kid, index) => {
+                    let kidId = `${roomKey}_${index}`; let pontos = 0; if(imersaoDataAdmin[kidId]) pontos = imersaoDataAdmin[kidId].total || 0;
+                    allKidsImersao.push({ name: kid.name, room: roomsData[roomKey].name, photo: kid.photo, pts: pontos });
+                });
+            });
+            allKidsImersao.sort((a, b) => b.pts - a.pts);
+            if(allKidsImersao.length === 0) { container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #9ca3af; padding: 20px;">Nenhuma criança encontrada.</div>'; return; }
+
+            allKidsImersao.forEach(k => {
+                const imgSrc = k.photo.startsWith('http') ? k.photo : `img/${k.photo}`;
+                container.innerHTML += `<div class="person-card" style="border-left: 5px solid var(--primary); align-items: center;"><img src="${imgSrc}" class="person-img" onerror="this.src='https://ui-avatars.com/api/?name=${k.name}&background=random'"><div class="person-info" style="flex:1; overflow:hidden;"><h4 style="margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${k.name}</h4><p style="margin:0; font-size:0.8rem; color:var(--text-muted);">${k.room}</p></div><div style="background: var(--success); color: white; padding: 8px 12px; border-radius: 12px; font-weight: 800; font-size: 1.1rem; text-align:center; min-width: 60px;">${k.pts}<br><span style="font-size:0.6rem; font-weight:700;">PTS</span></div></div>`;
+            });
+        }
+
+        function exportImersaoCSV() {
+            let csvContent = "\uFEFFTURMA;ALUNO;PONTOS TOTAIS\n";
+            Object.keys(roomsData).forEach(roomKey => {
+                let kidsInRoom = [];
+                kidsData[roomKey].forEach((kid, index) => {
+                    let kidId = `${roomKey}_${index}`; let pontos = 0; if(imersaoDataAdmin[kidId]) pontos = imersaoDataAdmin[kidId].total || 0;
+                    kidsInRoom.push({ name: kid.name, room: roomsData[roomKey].name, pts: pontos });
+                });
+                kidsInRoom.sort((a, b) => a.name.localeCompare(b.name));
+                csvContent += `\n--- ${roomsData[roomKey].name.toUpperCase()} ---;;\n`;
+                kidsInRoom.forEach(k => { let safeName = k.name.replace(/;/g, '').replace(/,/g, ''); csvContent += `${k.room};${safeName};${k.pts}\n`; });
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a");
+            link.setAttribute("href", url); link.setAttribute("download", "Pontuacao_Imersao_Biblica.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

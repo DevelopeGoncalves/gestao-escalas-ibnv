@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Imersão Bíblica | Kids</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-body: #f7f5ef; --primary-green: #2a6148; --text-dark: #1a202c; --text-muted: #a0aec0;
+            --gold-border: #f6e58d; --gold-bg: #fffdf0; --gold-medal: #f39c12;
+            --silver-border: #cbd5e1; --silver-bg: #f8fafc; --silver-medal: #94a3b8;
+            --bronze-border: #e2a03f; --bronze-bg: #fffaf0; --bronze-medal: #b45f06;
+            --white: #ffffff; --radius-card: 16px; --shadow-sm: 0 4px 6px rgba(0,0,0,0.03);
+        }
+
+        * { box-sizing: border-box; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { margin: 0; background-color: var(--bg-body); background-image: radial-gradient(#e5e0d8 1px, transparent 1px); background-size: 20px 20px; color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; overflow-x: hidden; }
+
+        .app-header { background: var(--primary-green); color: white; padding: 25px 20px 30px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 4px 10px rgba(42, 97, 72, 0.3); position: relative; flex-shrink: 0; z-index: 10; }
+        .app-header h1 { margin: 0; font-size: 1.6rem; font-weight: 900; letter-spacing: 0.5px; }
+        .app-header p { margin: 5px 0 0; font-size: 0.9rem; font-weight: 700; color: #d8f3dc; }
+        
+        .btn-logout { position: absolute; top: 20px; left: 15px; color: var(--primary-green); background: white; border: none; padding: 8px 15px; border-radius: 12px; cursor: pointer; display: none; font-weight: 800; box-shadow: var(--shadow-sm); }
+
+        .container { padding: 15px; flex: 1; overflow-y: auto; scroll-behavior: smooth; padding-bottom: 90px; }
+
+        .view { display: none; animation: fadeIn 0.3s ease; } .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        .card { background: white; padding: 20px; border-radius: var(--radius-card); box-shadow: var(--shadow-sm); margin-bottom: 20px; }
+        .section-title-sm { font-size: 1.1rem; font-weight: 900; margin-bottom: 15px; color: var(--primary-green); }
+
+        /* TELA INICIAL */
+        .welcome-hero { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; box-shadow: var(--shadow-sm); margin-bottom: 20px; border: 2px solid #e2e8f0; position: relative; overflow: hidden; }
+        .welcome-icon { font-size: 3.5rem; animation: float 3s ease-in-out infinite; margin-bottom: 10px; display: inline-block; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1)); }
+        .welcome-title { color: var(--primary-green); font-size: 1.4rem; font-weight: 900; margin: 0 0 5px; }
+        .welcome-text { color: var(--text-muted); font-size: 0.9rem; font-weight: 800; margin: 0; }
+        
+        .info-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .info-item { background: #f8fafc; padding: 12px; border-radius: 15px; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; }
+        .info-item span { font-size: 1.2rem; background: white; width: 35px; height: 35px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: var(--shadow-sm); }
+
+        .filter-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; justify-content: flex-start; scroll-snap-type: x mandatory;}
+        .filter-row::-webkit-scrollbar { display: none; }
+        .pill-tab { background: white; border: 1.5px solid #e2e8f0; padding: 10px 18px; border-radius: 25px; font-weight: 800; color: #718096; white-space: nowrap; cursor: pointer; transition: 0.2s; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm); scroll-snap-align: start;}
+        .pill-tab.active { background: var(--primary-green); color: white; border-color: var(--primary-green); transform: translateY(-2px); }
+
+        .kids-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 12px; margin-top: 15px; }
+        .kid-card { background: white; border-radius: 20px; padding: 12px 5px; text-align: center; box-shadow: var(--shadow-sm); cursor: pointer; border: 2px solid #f1f2f6; transition: 0.1s; display:flex; flex-direction:column; align-items:center;}
+        .kid-img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 3px solid #e2e8f0; margin-bottom: 8px; }
+        .kid-name { font-size: 0.8rem; font-weight: 800; color: var(--text-dark); line-height: 1.2; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 5px;}
+
+        /* PERFIL (AJUSTE DA FOTO E DOS PONTOS) */
+        .profile-header { text-align: center; margin-bottom: 20px; }
+        .avatar-wrapper { position: relative; display: inline-block; } /* Essa caixinha resolve o problema */
+        .avatar-wrapper .kid-img { width: 90px; height: 90px; border-width: 4px; border-color: var(--primary-green); margin-bottom: 0; }
+        .total-points-badge { 
+            position: absolute; bottom: 0; right: -15px; /* Joga para o canto inferior direito */
+            background: var(--primary-green); color: #fff; padding: 6px 12px; border-radius: 20px; 
+            font-weight: 900; font-size: 0.9rem; box-shadow: var(--shadow-sm); border: 3px solid white;
+        }
+        
+        .map-container { position: relative; padding: 25px 0 10px; }
+        .progress-track { position: absolute; top: 50%; left: 0; width: 100%; height: 10px; background: #e2e8f0; border-radius: 5px; transform: translateY(-50%); z-index: 1; }
+        .progress-fill { position: absolute; top: 50%; left: 0; height: 10px; background: #38b2ac; border-radius: 5px; transform: translateY(-50%); z-index: 2; transition: width 0.5s ease; width: 0%; }
+        .milestones { display: flex; justify-content: space-between; position: relative; z-index: 3; }
+        .milestone { width: 35px; height: 35px; border-radius: 50%; background: white; border: 3px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #a0aec0; transition: 0.3s; font-size: 0.9rem;}
+        .milestone.reached { border-color: #38b2ac; background: #38b2ac; color: white; }
+        .milestone span { position: absolute; bottom: -25px; font-size: 0.7rem; color: var(--text-dark); font-weight: 800; }
+
+        select { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; font-weight: 800; color: var(--primary-green); outline: none; margin-bottom: 15px; font-size: 0.95rem; }
+        
+        .task-list { display: flex; flex-direction: column; gap: 10px; }
+        .task-item { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 12px 15px; border-radius: 12px; border: 1px solid #e2e8f0; transition: 0.3s; gap: 10px;}
+        .task-item > div { flex: 1; min-width: 0; }
+        .task-item.locked { opacity: 0.6; background: #edf2f7; }
+        .task-label { font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;}
+        .task-points { font-size: 0.7rem; background: #e2e8f0; color: var(--text-dark); padding: 2px 8px; border-radius: 10px; font-weight: 800; white-space: nowrap;}
+        .custom-checkbox { width: 24px; height: 24px; accent-color: #38b2ac; flex-shrink: 0; }
+        
+        .btn-success { width: 100%; border: none; padding: 15px; border-radius: 15px; font-weight: 800; cursor: pointer; font-size: 1rem; color: white; background: #38b2ac; margin-top: 15px; transition: 0.2s; }
+        .btn-success:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        /* RANKING */
+        .ranking-header-wrapper { background: white; border-radius: 20px; padding: 20px 15px; box-shadow: var(--shadow-sm); margin-bottom: 15px; }
+        .ranking-title { color: var(--primary-green); font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; margin: 0 0 15px 0; }
+        
+        .stats-grid { display: flex; gap: 8px; margin-bottom: 20px; }
+        .stat-box { flex: 1; background: white; border-radius: 12px; padding: 12px 5px; text-align: center; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .stat-box strong { color: var(--primary-green); font-size: 1.4rem; font-weight: 900; line-height: 1; }
+        .stat-box span { color: var(--text-muted); font-size: 0.6rem; font-weight: 800; margin-top: 4px; letter-spacing: 0.5px; }
+
+        .ranking-list { display: flex; flex-direction: column; gap: 10px; }
+        .rank-item { display: flex; align-items: center; padding: 12px; border-radius: 16px; box-shadow: var(--shadow-sm); border: 2px solid transparent; background: white; gap: 10px; overflow: hidden; }
+        
+        .rank-item.pos-1 { background: var(--gold-bg); border-color: var(--gold-border); }
+        .rank-item.pos-2 { background: var(--silver-bg); border-color: var(--silver-border); }
+        .rank-item.pos-3 { background: var(--bronze-bg); border-color: var(--bronze-border); }
+        .rank-item.pos-other { border-color: #e2e8f0; }
+
+        .rank-medal-container { width: 35px; display: flex; justify-content: center; align-items: center; flex-shrink:0;}
+        .css-medal { position: relative; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 0.75rem; z-index: 2; }
+        .css-medal::after, .css-medal::before { content: ''; position: absolute; bottom: -5px; width: 8px; height: 10px; z-index: -1; background: inherit; }
+        .css-medal::before { left: 2px; transform: rotate(15deg); }
+        .css-medal::after { right: 2px; transform: rotate(-15deg); }
+
+        .pos-1 .css-medal { background: var(--gold-medal); border: 2px solid #d4ac0d; }
+        .pos-2 .css-medal { background: var(--silver-medal); border: 2px solid #7f8c8d; }
+        .pos-3 .css-medal { background: var(--bronze-medal); border: 2px solid #a04000; }
+        .rank-number { font-size: 1.3rem; font-weight: 900; color: var(--primary-green); text-align: center; width: 100%; }
+
+        .rank-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #e2e8f0; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink:0;}
+        .rank-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .rank-name { font-weight: 900; font-size: 0.95rem; color: var(--primary-green); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .rank-room { font-size: 0.7rem; color: var(--text-muted); font-weight: 800; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+        
+        .rank-pts-col { text-align: center; display: flex; flex-direction: column; align-items: center; line-height: 1; flex-shrink:0; padding-left: 5px;}
+        .rank-pts-num { font-size: 1.4rem; font-weight: 900; color: var(--primary-green); }
+        .rank-pts-lbl { font-size: 0.7rem; color: var(--text-muted); font-weight: 800; margin-top: 2px; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 10px; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 100; display: none; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #a0aec0; font-weight: 800; font-size: 0.75rem; cursor: pointer; transition: 0.2s; gap: 4px; }
+        .nav-item i { font-size: 1.3rem; }
+        .nav-item.active { color: var(--primary-green); }
+        .lock-msg { font-size: 0.7rem; color: #e53e3e; font-weight: 800; display: block; margin-top: 3px; }
+
+        @media (max-width: 380px) {
+            .app-header h1 { font-size: 1.4rem; }
+            .rank-name { font-size: 0.85rem; }
+            .rank-avatar { width: 35px; height: 35px; }
+            .rank-pts-num { font-size: 1.2rem; }
+            .pill-tab { padding: 8px 12px; font-size: 0.8rem; }
+            .task-label { font-size: 0.8rem; }
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <header class="app-header">
+        <button class="btn-logout" id="btn-voltar" onclick="logout()"><i class="fas fa-undo-alt"></i></button>
+        <h1>🎪 Imersão Bíblica</h1>
+        <p>Acompanhamento de Pontos</p>
+    </header>
+
+    <div class="container">
+        <div id="login-view" class="view active">
+            <div class="welcome-hero">
+                <div class="welcome-icon">🏕️</div>
+                <h2 class="welcome-title">Bem-vindos à Imersão!</h2>
+                <p class="welcome-text">Prepare sua mochila e participe das nossas aventuras em família.</p>
+            </div>
+            <div class="card" style="padding-top: 20px; margin-bottom: 20px;">
+                <h3 style="color: var(--primary-green); font-weight: 900; margin-top: 0; text-align: center; font-size: 1.1rem;">🎒 Como ganhar pontos?</h3>
+                <div class="info-list">
+                    <div class="info-item"><span>📖</span> EBD (09h às 11h)</div>
+                    <div class="info-item"><span>⛪</span> Culto (18h às 20h)</div>
+                    <div class="info-item"><span>🖍️</span> Atividade (18h às 20h)</div>
+                </div>
+            </div>
+            <div class="card" style="text-align: center; background: transparent; box-shadow: none; padding: 0;">
+                <h3 style="margin-top:0; color: var(--primary-green); font-weight: 900; font-size: 1.1rem;">Escolha a sua Turma:</h3>
+                <div class="filter-row" id="login-room-filters"></div>
+            </div>
+            <div class="kids-grid" id="kids-list" style="display: none;"></div>
+        </div>
+
+        <div id="dashboard-view" class="view">
+            <div class="profile-header">
+                <div class="avatar-wrapper">
+                    <img src="" id="dash-kid-img" class="kid-img">
+                    <div class="total-points-badge"><span id="display-total-points">0</span> pts</div>
+                </div>
+                
+                <h2 id="dash-kid-name" style="margin: 10px 0 5px; font-weight: 900; font-size: 1.3rem; color: var(--primary-green);">Nome</h2>
+                <span id="dash-kid-room" style="color: var(--text-muted); font-weight: 800; font-size: 0.85rem;">Turma</span>
+            </div>
+
+            <div class="card">
+                <div class="section-title-sm">🗺️ Progresso Geral</div>
+                <div class="map-container">
+                    <div class="progress-track"></div>
+                    <div class="progress-fill" id="progress-bar"></div>
+                    <div class="milestones">
+                        <div class="milestone reached" id="ms-0"><i class="fas fa-play"></i><span>Início</span></div>
+                        <div class="milestone" id="ms-10">10<span>B</span></div>
+                        <div class="milestone" id="ms-25">25<span>P</span></div>
+                        <div class="milestone" id="ms-50"><i class="fas fa-crown"></i><span>Ouro</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title-sm">🗓️ Marcar Domingo</div>
+                <select id="sunday-date" onchange="carregarFormularioSemana()"></select>
+
+                <div class="task-list">
+                    <label class="task-item" id="item-ebd">
+                        <div>
+                            <div class="task-label">📖 Participou da EBD? <span class="task-points">+1 pt</span></div>
+                            <span class="lock-msg" id="lock-msg-ebd">Disponível de 09h às 11h</span>
+                        </div>
+                        <input type="checkbox" class="custom-checkbox" id="chk-ebd">
+                    </label>
+                    <label class="task-item" id="item-culto">
+                        <div>
+                            <div class="task-label">⛪ Culto à Noite? <span class="task-points">+1 pt</span></div>
+                            <span class="lock-msg" id="lock-msg-culto">Disponível de 18h às 20h</span>
+                        </div>
+                        <input type="checkbox" class="custom-checkbox" id="chk-culto">
+                    </label>
+                    <label class="task-item" id="item-atividade">
+                        <div>
+                            <div class="task-label">🖍️ Entregou Atividade? <span class="task-points">+1 pt</span></div>
+                            <span class="lock-msg" id="lock-msg-ativ">Disponível de 18h às 20h</span>
+                        </div>
+                        <input type="checkbox" class="custom-checkbox" id="chk-atividade">
+                    </label>
+                </div>
+                <button class="btn-success" id="btn-salvar-domingo" onclick="salvarPontosSemanais()">Salvar Pontos</button>
+            </div>
+
+            <div class="card">
+                <div class="section-title-sm">🏆 Gincanas Especiais</div>
+                <div class="task-list">
+                    <label class="task-item"><div><div class="task-label">🏕️ 1º Enc. (23/Mai) <span class="task-points">+5</span></div></div><input type="checkbox" class="custom-checkbox" id="chk-gin-1" onchange="salvarGincanas()"></label>
+                    <label class="task-item"><div><div class="task-label">🔥 2º Enc. (25/Jul) <span class="task-points">+5</span></div></div><input type="checkbox" class="custom-checkbox" id="chk-gin-2" onchange="salvarGincanas()"></label>
+                    <label class="task-item"><div><div class="task-label">🧭 3º Enc. (19/Set) <span class="task-points">+5</span></div></div><input type="checkbox" class="custom-checkbox" id="chk-gin-3" onchange="salvarGincanas()"></label>
+                    <label class="task-item"><div><div class="task-label">🏅 4º Enc. (21/Nov) <span class="task-points">+10</span></div></div><input type="checkbox" class="custom-checkbox" id="chk-gin-4" onchange="salvarGincanas()"></label>
+                </div>
+            </div>
+        </div>
+
+        <div id="ranking-view" class="view">
+            <div class="ranking-header-wrapper">
+                <h2 class="ranking-title"><i class="fas fa-medal" style="color: #e2a03f;"></i> Classificação</h2>
+                <div class="filter-row" id="ranking-filters"></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box"><strong id="stat-kids-count">0</strong><span>CRIANÇAS</span></div>
+                <div class="stat-box"><strong id="stat-max-pts">0</strong><span>MAIS PTS</span></div>
+                <div class="stat-box"><strong id="stat-weeks-count">1</strong><span>SEMANAS</span></div>
+            </div>
+            <div class="ranking-list" id="ranking-list-container"></div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav" id="bottom-nav">
+        <div class="nav-item active" id="nav-perfil" onclick="switchTab('dashboard')"><i class="fas fa-user-circle"></i><span>Perfil</span></div>
+        <div class="nav-item" id="nav-ranking" onclick="switchTab('ranking')"><i class="fas fa-trophy"></i><span>Ranking</span></div>
+    </nav>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI5S5ciZioheWabi0W0Ii_r0e3RsYm3iw", authDomain: "cadastro-final-cc77f.firebaseapp.com",
+            databaseURL: "https://cadastro-final-cc77f-default-rtdb.firebaseio.com", projectId: "cadastro-final-cc77f",
+            storageBucket: "cadastro-final-cc77f.firebasestorage.app", messagingSenderId: "229086987694",
+            appId: "1:229086987694:web:52f1a32f4b1a9f5be2743f", measurementId: "G-9F9WBCMH6Y"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        const roomsData = { berçario: { name: "Berçário", icon: "👶" }, alfa: { name: "Alfa", icon: "🧸" }, beta: { name: "Beta", icon: "🎨" }, gama: { name: "Gama", icon: "⚽" }, ômega: { name: "Ômega", icon: "📚" } };
+        
+        const kidsRawData = {
+            berçario: [ { name: "Maria Eduarda", photo: "m_eduarda.png" }, { name: "João Pedro", photo: "j_pedro.png" }, { name: "Sophia R.", photo: "sophia.png" }, { name: "Benício L.", photo: "benicio.png" }, { name: "Lara M.", photo: "lara.png" } ],
+            alfa: [ { name: "Alice", photo: "alice_alfa.png" }, { name: "Levi", photo: "levi_alfa.png" }, { name: "Emily", photo: "emily_alfa.png" }, { name: "Arthur", photo: "arthur_alfa.png" }, { name: "Laura", photo: "laura_alfa.png" }, { name: "Benício", photo: "benicio_aalfa.png" }, { name: "Heloísa", photo: "heloisa_alfa.png" }, { name: "Júlio", photo: "julio_alfa.png" }, { name: "Bernardo", photo: "bernardo_alfa.png" }, { name: "Isadora", photo: "isadora_alfa.png" }, { name: "Emanuel", photo: "emanuel_alfa.png" }, { name: "Heitor", photo: "heitor_alfa.png" }, { name: "Davi", photo: "davi_alfa.png" }, { name: "Elisa", photo: "elisa_alfa.png" }, { name: "Vitoria", photo: "vitoria_alfa.png" }, { name: "Théo", photo: "Theo_alfa.png" } ],
+            beta: [ { name: "Maitê", photo: "maite_beta.png" }, { name: "Liz Pacheco", photo: "liz_pacheco_beta.png" }, { name: "Helena M.", photo: "helena_beta.png" }, { name: "Pedro", photo: "pedro_beta.png" }, { name: "Tiffany", photo: "tiffany_beta.png" }, { name: "Arthur Souza", photo: "arthur_beta.png" }, { name: "João", photo: "joao_beta.png" }, { name: "José Luís", photo: "jose_luis_beta.png" }, { name: "João Miguel", photo: "joao_miguel_beta.png" }, { name: "Matteo", photo: "matteo_beta.png" }, { name: "Murilo", photo: "murilo_beta.png" }, { name: "Elisa", photo: "elisa_beta.png" }, { name: "Safira", photo: "safira_beta.png" }, { name: "Manuella", photo: "manuella_beta.png" }, { name: "Nicoly", photo: "nicoly_beta.png" }, { name: "Helena Pimenta.", photo: "helena_p_beta.png" }, { name: "Enrico J.", photo: "enrico_beta.png" }, { name: "Liz Medeiros", photo: "liz_Medeiros_beta.png" }, { name: "Arthur R.", photo: "arthur_beta.png" }, { name: "Benjamin", photo: "benjamin_beta.png" }, { name: "Ana Luiza", photo: "ana_luiza_beta.png" }, { name: "Liz Couto", photo: "liz_couto_beta.png" } ],
+            gama: [ { name: "Isaac", photo: "isaac_gama.png" }, { name: "Davi", photo: "davi_gama.png" }, { name: "Sophia", photo: "sophia_gama.png" }, { name: "Wendel", photo: "wendel_gama.png" }, { name: "Isabela", photo: "isabela_gama.png" }, { name: "Lauren", photo: "lauren_gama.png" }, { name: "Brayan", photo: "brayan_gama.png" }, { name: "Emanuelly", photo: "emanuelly_gama.png" }, { name: "Kauã", photo: "kaua_gama.png" }, { name: "Vicente", photo: "vicente_gama.png" }, { name: "Elisa Romão", photo: "elisa_romao_gama.png" }, { name: "Helena Miranda", photo: "helena_gama.png" }, { name: "Ana Clara", photo: "ana_clara_gama.png" }, { name: "Érick", photo: "erick_gama.png" }, { name: "Lorenzo", photo: "lorenzo_gama.png" }, { name: "Theo", photo: "theo_gama.png" }, { name: "Brunelly", photo: "Brunelly_gama.png" }, { name: "Vitor", photo: "Vitor_gama.png" }, { name: "João Pedro Barros", photo: "joao_pedro_gama.png" } ],
+            ômega: [ { name: "Nicolly", photo: "nicolly_omega.png" }, { name: "Saulo", photo: "saulo_omega.png" }, { name: "Kemily", photo: "kemily_omega.png" }, { name: "Maria Eduarda", photo: "maria_eduarda_omega.png" }, { name: "Lorena", photo: "lorena_omega.png" }, { name: "Laura", photo: "laura_omega.png" }, { name: "Eduardo", photo: "eduardo_omega.png" }, { name: "Kauã", photo: "kaua_omega.png" }, { name: "Pedro Lucas", photo: "pedro_lucas_omega.png" }, { name: "Italo", photo: "italo_omega.png" }, { name: "Davi", photo: "davi_omega.png" }, { name: "Laiz", photo: "laiz_omega.png" }, { name: "Micael", photo: "micael_omega.png" }, { name: "Ketelly", photo: "ketelly_omega.png" }, { name: "Bernardo", photo: "bernardo_omega.png" }, { name: "Asafe", photo: "asafe_omega.png" }, { name: "Isabelly", photo: "isabelly_omega.png" }, { name: "Heitor", photo: "heitor_omega.png" }, { name: "Lívia", photo: "livya_omega.png" }, { name: "Smith", photo: "smith_omega.png" }, { name: "Mikeias", photo: "mikeias_omega.png" }, { name: "Raphaela", photo: "raphaela_omega.png" }, { name: "Éric", photo: "eric_omega.png" }, { name: "Lavínia", photo: "lavinia_omega.png" }, { name: "Pietra", photo: "pietra_omega.png" }, { name: "Sophia", photo: "sophia_omega.png" }, { name: "João Miguel", photo: "joao_miguel_omega.png" }, { name: "Maria", photo: "maria_omega.png" }, { name: "Pedro", photo: "pedro_omega.png" }, { name: "Emilly sophia", photo: "emillysophia_omega.png" }, { name: "Kethelyn Lorrana", photo: "KethelynLorrana_omega.png" }, { name: "Yasmim da Silva", photo: "Yasmim_omega.png" }, { name: "Saulo", photo: "saulo_omega.png" }, { name: "Marlim felicio", photo: "marlim_omega.png" }, { name: "Arthur Oliveira", photo: "arthuroliveira_omega.png" }, { name: "Davi santana", photo: "Davisantana_omega.png" } ]
+        };
+
+        const kidsData = {}; const allKidsFlat = [];
+        Object.keys(kidsRawData).forEach(roomKey => {
+            kidsData[roomKey] = kidsRawData[roomKey].map((kid, index) => {
+                const kidObj = { id: `${roomKey}_${index}`, name: kid.name, photo: kid.photo, roomKey: roomKey, room: roomsData[roomKey].name, icon: roomsData[roomKey].icon };
+                allKidsFlat.push(kidObj); return kidObj;
+            });
+        });
+
+        let currentKidId = null; let currentKidName = ""; let currentKidRoom = ""; let currentKidPhoto = ""; let currentRankingFilter = 'Todos'; 
+        let dbScores = {};
+
+        window.onload = () => {
+            renderLoginFilters(); renderRankingFilters(); popularSelectDomingos();
+            db.ref('imersao_biblica_scores').on('value', snapshot => {
+                dbScores = snapshot.val() || {};
+                if(currentKidId) atualizarDashboard();
+                renderizarRanking();
+            });
+            checkAutoLogin();
+        };
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(tabName === 'dashboard') {
+                document.getElementById('dashboard-view').classList.add('active');
+                document.getElementById('nav-perfil').classList.add('active');
+                atualizarDashboard();
+            } else if (tabName === 'ranking') {
+                document.getElementById('ranking-view').classList.add('active');
+                document.getElementById('nav-ranking').classList.add('active');
+                renderizarRanking();
+            }
+        }
+
+        function getHojeFormatado() {
+            let d = new Date(); return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+        }
+
+        function popularSelectDomingos() {
+            const select = document.getElementById('sunday-date'); select.innerHTML = '';
+            let d = new Date(); d.setDate(d.getDate() - d.getDay()); 
+            for(let i=0; i<4; i++) {
+                let dateStr = d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+                let text = i === 0 ? `👉 ${dateStr} (Hoje)` : `📅 ${dateStr}`;
+                select.innerHTML += `<option value="${dateStr}">${text}</option>`;
+                d.setDate(d.getDate() - 7);
+            }
+        }
+
+        function aplicarTravasDeHorario() {
+            const dateSelecionada = document.getElementById('sunday-date').value;
+            const hojeStr = getHojeFormatado();
+            const agora = new Date(); const diaSemana = agora.getDay(); const hora = agora.getHours();
+            const isHoje = (dateSelecionada === hojeStr); const isDomingo = (diaSemana === 0);
+
+            const ebdLiberado = isHoje && isDomingo && (hora >= 9 && hora < 11);
+            const cultoAtivLiberado = isHoje && isDomingo && (hora >= 18 && hora < 20);
+
+            document.getElementById('chk-ebd').disabled = !ebdLiberado;
+            document.getElementById('item-ebd').classList.toggle('locked', !ebdLiberado);
+            document.getElementById('lock-msg-ebd').innerHTML = ebdLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 09h às 11h)';
+
+            document.getElementById('chk-culto').disabled = !cultoAtivLiberado;
+            document.getElementById('item-culto').classList.toggle('locked', !cultoAtivLiberado);
+            document.getElementById('lock-msg-culto').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 18h às 20h)';
+
+            document.getElementById('chk-atividade').disabled = !cultoAtivLiberado;
+            document.getElementById('item-atividade').classList.toggle('locked', !cultoAtivLiberado);
+            document.getElementById('lock-msg-ativ').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 18h às 20h)';
+
+            document.getElementById('btn-salvar-domingo').disabled = !isHoje;
+        }
+
+        function carregarFormularioSemana() {
+            const dateStr = document.getElementById('sunday-date').value;
+            let historyObj = null;
+            if(dbScores[currentKidId] && dbScores[currentKidId].history) historyObj = dbScores[currentKidId].history[dateStr];
+            document.getElementById('chk-ebd').checked = historyObj ? historyObj.ebd : false;
+            document.getElementById('chk-culto').checked = historyObj ? historyObj.culto : false;
+            document.getElementById('chk-atividade').checked = historyObj ? historyObj.atividade : false;
+            aplicarTravasDeHorario();
+        }
+
+        function salvarPontosSemanais() {
+            const dateStr = document.getElementById('sunday-date').value;
+            const ebd = document.getElementById('chk-ebd').checked;
+            const culto = document.getElementById('chk-culto').checked;
+            const atividade = document.getElementById('chk-atividade').checked;
+            let ptsDia = (ebd ? 1 : 0) + (culto ? 1 : 0) + (atividade ? 1 : 0);
+
+            db.ref(`imersao_biblica_scores/${currentKidId}/history/${dateStr}`).set({ ebd: ebd, culto: culto, atividade: atividade, pts: ptsDia }).then(() => { alert(`✅ Salvo com sucesso!`); });
+        }
+
+        function salvarGincanas() {
+            db.ref(`imersao_biblica_scores/${currentKidId}/gincanas`).set({
+                g1: document.getElementById('chk-gin-1').checked, g2: document.getElementById('chk-gin-2').checked,
+                g3: document.getElementById('chk-gin-3').checked, g4: document.getElementById('chk-gin-4').checked
+            });
+        }
+
+        function renderLoginFilters() {
+            const container = document.getElementById('login-room-filters');
+            Object.keys(roomsData).forEach(key => {
+                const btn = document.createElement('div'); btn.className = 'pill-tab';
+                btn.innerHTML = `${roomsData[key].icon} ${roomsData[key].name}`;
+                btn.onclick = () => { container.querySelectorAll('.pill-tab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderKidsLogin(key); };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderKidsLogin(roomKey) {
+            const container = document.getElementById('kids-list');
+            container.innerHTML = ''; container.style.display = 'grid';
+            (kidsData[roomKey] || []).forEach(kid => {
+                const div = document.createElement('div'); div.className = 'kid-card';
+                const imgSrc = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+                div.innerHTML = `<img src="${imgSrc}" class="kid-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random&color=fff'"><div class="kid-name">${kid.name}</div>`;
+                div.onclick = () => login(kid.id, kid.name, kid.room, imgSrc);
+                container.appendChild(div);
+            });
+            setTimeout(() => { container.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+        }
+
+        function login(id, name, room, photo) {
+            currentKidId = id; currentKidName = name; currentKidRoom = room; currentKidPhoto = photo;
+            localStorage.setItem('familia_campo_session', JSON.stringify({id, name, room, photo}));
+            if (!dbScores[id]) { db.ref(`imersao_biblica_scores/${id}`).set({ total: 0, gincanas: { g1: false, g2: false, g3: false, g4: false }, history: {} }); }
+            document.getElementById('login-view').classList.remove('active'); document.getElementById('btn-voltar').style.display = 'block'; document.getElementById('bottom-nav').style.display = 'flex';
+            switchTab('dashboard'); 
+        }
+
+        function logout() {
+            localStorage.removeItem('familia_campo_session'); currentKidId = null;
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('login-view').classList.add('active'); document.getElementById('btn-voltar').style.display = 'none'; document.getElementById('bottom-nav').style.display = 'none';
+            document.getElementById('kids-list').style.display = 'none'; document.querySelectorAll('#login-room-filters .pill-tab').forEach(b => b.classList.remove('active'));
+        }
+
+        function checkAutoLogin() {
+            const session = JSON.parse(localStorage.getItem('familia_campo_session'));
+            if (session) login(session.id, session.name, session.room, session.photo);
+        }
+
+        function atualizarDashboard() {
+            document.getElementById('dash-kid-name').innerText = currentKidName; document.getElementById('dash-kid-room').innerText = currentKidRoom; document.getElementById('dash-kid-img').src = currentKidPhoto;
+            carregarFormularioSemana();
+            let data = dbScores[currentKidId] || { gincanas: {}, history: {} }; if(!data.gincanas) data.gincanas = {};
+            document.getElementById('chk-gin-1').checked = data.gincanas.g1 || false; document.getElementById('chk-gin-2').checked = data.gincanas.g2 || false;
+            document.getElementById('chk-gin-3').checked = data.gincanas.g3 || false; document.getElementById('chk-gin-4').checked = data.gincanas.g4 || false;
+
+            let total = 0;
+            if(data.history) Object.values(data.history).forEach(dia => total += dia.pts);
+            if(data.gincanas.g1) total += 5; if(data.gincanas.g2) total += 5; if(data.gincanas.g3) total += 5; if(data.gincanas.g4) total += 10;
+            
+            db.ref(`imersao_biblica_scores/${currentKidId}/total`).set(total);
+            document.getElementById('display-total-points').innerText = total;
+            document.getElementById('progress-bar').style.width = Math.min((total / 50) * 100, 100) + '%';
+            document.getElementById('ms-10').classList.toggle('reached', total >= 10); document.getElementById('ms-25').classList.toggle('reached', total >= 25); document.getElementById('ms-50').classList.toggle('reached', total >= 50);
+        }
+
+        function renderRankingFilters() {
+            const container = document.getElementById('ranking-filters'); container.innerHTML = '';
+            const btnTodos = document.createElement('div'); btnTodos.className = 'pill-tab active'; btnTodos.innerText = 'Todos';
+            btnTodos.onclick = () => { setRankingFilter('Todos', btnTodos); }; container.appendChild(btnTodos);
+            Object.keys(roomsData).forEach(key => {
+                const btn = document.createElement('div'); btn.className = 'pill-tab'; btn.innerHTML = `${roomsData[key].icon} ${roomsData[key].name}`;
+                btn.onclick = () => { setRankingFilter(key, btn); }; container.appendChild(btn);
+            });
+        }
+
+        function setRankingFilter(filterVal, btnElement) {
+            currentRankingFilter = filterVal; document.querySelectorAll('#ranking-filters .pill-tab').forEach(b => b.classList.remove('active')); btnElement.classList.add('active'); renderizarRanking();
+        }
+
+        function renderizarRanking() {
+            const container = document.getElementById('ranking-list-container'); container.innerHTML = '';
+            let listaFiltrada = allKidsFlat.filter(k => currentRankingFilter === 'Todos' || k.roomKey === currentRankingFilter);
+            let semanasUnicas = new Set();
+            listaFiltrada = listaFiltrada.map(k => {
+                let pontuacao = 0;
+                if (dbScores[k.id]) {
+                    pontuacao = dbScores[k.id].total || 0;
+                    if (dbScores[k.id].history) Object.keys(dbScores[k.id].history).forEach(d => { if (dbScores[k.id].history[d].pts > 0) semanasUnicas.add(d); });
+                }
+                return { ...k, total: pontuacao };
+            });
+            listaFiltrada.sort((a, b) => b.total - a.total);
+            
+            document.getElementById('stat-kids-count').innerText = listaFiltrada.length;
+            document.getElementById('stat-max-pts').innerText = listaFiltrada.length > 0 ? listaFiltrada[0].total : 0;
+            document.getElementById('stat-weeks-count').innerText = semanasUnicas.size === 0 ? 1 : semanasUnicas.size; 
+
+            if (listaFiltrada.length === 0) { container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Nenhuma criança nesta sala.</div>`; return; }
+
+            listaFiltrada.forEach((k, index) => {
+                let rankClass = 'pos-other'; let posContent = `<div class="rank-number">${index + 1}</div>`;
+                if (index === 0) { rankClass = 'pos-1'; posContent = `<div class="rank-medal-container"><div class="css-medal">1</div></div>`; } 
+                else if (index === 1) { rankClass = 'pos-2'; posContent = `<div class="rank-medal-container"><div class="css-medal">2</div></div>`; } 
+                else if (index === 2) { rankClass = 'pos-3'; posContent = `<div class="rank-medal-container"><div class="css-medal">3</div></div>`; }
+
+                const imgSrc = k.photo.startsWith('http') ? k.photo : `img/${k.photo}`;
+                container.innerHTML += `<div class="rank-item ${rankClass}"><div class="rank-pos">${posContent}</div><img src="${imgSrc}" class="rank-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${k.name}&background=random&color=fff'"><div class="rank-info"><div class="rank-name">${k.name}</div><div class="rank-room">${k.icon} ${k.room}</div></div><div class="rank-pts-col"><span class="rank-pts-num">${k.total}</span><span class="rank-pts-lbl">pts</span></div></div>`;
+            });
+        }
+    </script>
+</body>
+</html>
