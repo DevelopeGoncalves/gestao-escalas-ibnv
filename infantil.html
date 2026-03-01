@@ -270,6 +270,21 @@
         .overlay.active { display: block; }
         .hidden { display: none !important; }
 
+        .teacher-select-item.already-scheduled { 
+            background: #fffbeb; 
+            border-left: 4px solid var(--secondary); 
+        }
+        .badge-scheduled { 
+            background: var(--secondary); 
+            color: white; 
+            font-size: 0.65rem; 
+            padding: 2px 6px; 
+            border-radius: 8px; 
+            margin-left: auto; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+        }
+
         @media (max-width: 768px) {
             .sidebar { position: fixed; left: -280px; height: 100%; }
             .sidebar.active { left: 0; }
@@ -321,7 +336,7 @@
             <h3 style="margin-top:0;" id="modalFormTitle">✏️ Gerenciar Escala</h3>
             <input type="hidden" id="editRoomKey"><input type="hidden" id="editIndex"><input type="hidden" id="formMode"> 
             <div class="form-group"><label>Turma / Sala</label><select id="modalRoomSelect" onchange="updateTeacherListByRoomSelect()"><option value="">Selecione a Sala...</option></select></div>
-            <div class="form-group"><label>Data</label><input type="date" id="modalDate" style="font-weight:700; color:var(--primary);"></div>
+            <div class="form-group"><label>Data</label><input type="date" id="modalDate" style="font-weight:700; color:var(--primary);" onchange="updateTeacherListByRoomSelect()"></div>
             <div class="form-group"><label>Lição / Tema</label><input type="text" id="modalLesson" placeholder="Ex: A Criação"></div>
             <div class="form-group"><label>Selecionar Professores (Troca/Edição)</label><small style="display:block; color:var(--text-muted); margin-bottom:5px;">Marque quem entra e desmarque quem sai.</small><div id="teacherSelectionList" class="teacher-select-list"></div></div>
             <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn btn-danger" onclick="closeScheduleFormModal()">Cancelar</button><button class="btn btn-success" onclick="saveScheduleForm()">Salvar Escala</button></div>
@@ -469,6 +484,7 @@
                 <h4 style="margin-top:0; color:var(--secondary);">🛠️ Modo Edição Ativo</h4>
                 <p style="font-size:0.9rem;">Para <b>trocar professores</b> de uma escala existente, clique em "Editar".</p>
                 <button class="btn btn-success" onclick="openNewScheduleModal()"><i class="fas fa-plus-circle"></i> Adicionar Nova Data</button>
+                <button class="btn btn-danger" onclick="limparEscalasFuturas()" style="margin-top: 10px;"><i class="fas fa-exclamation-triangle"></i> Resetar Escalas Futuras (Manter Histórico)</button>
             </div>
             
             <div class="form-group">
@@ -763,36 +779,60 @@
             const extras = snapshot.val();
             if(!extras) return;
 
-            // Atualiza Alunos
+            // Atualiza ou Adiciona Alunos
             if(extras.alunos) {
                 Object.keys(extras.alunos).forEach(roomKey => {
-                    if(kidsData[roomKey]) {
-                        Object.keys(extras.alunos[roomKey]).forEach(safeName => {
-                            const kidToUpdate = kidsData[roomKey].find(k => k.name.replace(/[.#$[\]]/g, '') === safeName);
-                            if(kidToUpdate) {
-                                const data = extras.alunos[roomKey][safeName];
-                                if(data.dob !== undefined) kidToUpdate.dob = data.dob;
-                                if(data.phone !== undefined) kidToUpdate.phone = data.phone;
-                                if(data.guardian !== undefined) kidToUpdate.guardian = data.guardian;
-                            }
-                        });
-                    }
+                    if(!kidsData[roomKey]) kidsData[roomKey] = []; // Garante que a sala existe
+                    
+                    Object.keys(extras.alunos[roomKey]).forEach(safeName => {
+                        const data = extras.alunos[roomKey][safeName];
+                        const kidToUpdate = kidsData[roomKey].find(k => k.name.replace(/[.#$[\]]/g, '') === safeName);
+                        
+                        if(kidToUpdate) {
+                            // Se já existe, só atualiza
+                            if(data.dob !== undefined) kidToUpdate.dob = data.dob;
+                            if(data.phone !== undefined) kidToUpdate.phone = data.phone;
+                            if(data.guardian !== undefined) kidToUpdate.guardian = data.guardian;
+                        } else if (data.isNew) {
+                            // Se não existe, é um aluno novo! Injeta na lista.
+                            kidsData[roomKey].push({
+                                id: Date.now() + Math.random(),
+                                name: data.name || safeName,
+                                photo: data.photo || "",
+                                dob: data.dob || "",
+                                guardian: data.guardian || "",
+                                phone: data.phone || ""
+                            });
+                        }
+                    });
                 });
             }
 
-            // Atualiza Professores
+            // Atualiza ou Adiciona Professores
             if(extras.professores) {
                 Object.keys(extras.professores).forEach(safeName => {
+                    const data = extras.professores[safeName];
                     const teacherToUpdate = fixedTeachersData.find(t => t.name.replace(/[.#$[\]]/g, '') === safeName);
+                    
                     if(teacherToUpdate) {
-                        const data = extras.professores[safeName];
+                        // Se já existe, só atualiza
                         if(data.dob !== undefined) teacherToUpdate.dob = data.dob;
                         if(data.phone !== undefined) teacherToUpdate.phone = data.phone;
+                        if(data.room !== undefined) teacherToUpdate.room = data.room;
+                    } else if (data.isNew) {
+                         // Se não existe, é um professor novo! Injeta na lista.
+                         fixedTeachersData.push({
+                            name: data.name || safeName,
+                            photo: data.photo || "",
+                            room: data.room || "",
+                            dob: data.dob || "",
+                            phone: data.phone || ""
+                         });
                     }
                 });
             }
 
-            // Recarrega as telas se estiverem ativas
+            // Recarrega as telas para mostrar as pessoas novas
             if (typeof renderAdminPeople === "function") renderAdminPeople();
             if (typeof renderBirthdays === "function") renderBirthdays();
         });
@@ -812,19 +852,25 @@
             searchTerm = ''; 
             document.getElementById('teacherSearchInput').value=''; 
             filterSchedulesByDate(d, b); 
-        }, selectedEscalaDate);
+        }, selectedEscalaDate, true); // <-- Adicionamos o 'true' aqui no final
 
-        // 2. Gera os botões de data para a aba de Lições (ISSO RESOLVE O SEU PROBLEMA!)
+        // 2. Gera os botões de data para a aba de Lições
         generateDateFilters('date-filters-licoes', (d, b) => { 
             selectedDateLicoes = d; 
             togglePill(b); 
             reloadLessonView(); 
-            checkLessonState(); // Valida se libera o botão de upload
-        }, selectedDateLicoes);
+            checkLessonState(); 
+        }, selectedDateLicoes, true); // <-- Pode colocar 'true' aqui também se quiser esconder nas lições
 
         renderSchedules(); 
         renderHistory();
         updateDashboard();
+
+        // NOVO: Atualiza a lista de professores em tempo real se o modal estiver aberto
+        // Assim, se outro líder escalar alguém, a tag "Já Escalado" aparece na mesma hora!
+        if (document.getElementById('scheduleFormModal').classList.contains('active')) {
+            updateTeacherListByRoomSelect();
+        }
     });
 }
 
@@ -975,18 +1021,20 @@
             document.getElementById('total-kids-count').innerText = total;
             document.getElementById('total-teachers-count').innerText = fixedTeachersData ? fixedTeachersData.length : 0;
             
-            const today = new Date(); today.setHours(0,0,0,0);
-            let nextDateStr = "--/--";
+            // NOVA LÓGICA: Calcula automaticamente o próximo Domingo
+            const today = new Date();
+            const nextSunday = new Date(today);
             
-            if (allDates && allDates.length > 0) {
-                 const found = allDates.find(d => {
-                    const parts = d.split('/');
-                    const dateObj = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
-                    return dateObj >= today;
-                });
-                if (found) nextDateStr = found.substr(0, 5);
-            }
-            document.getElementById('next-sunday-date').innerText = nextDateStr;
+            // today.getDay() retorna 0 para Domingo, 1 para Segunda...
+            // Se hoje não for domingo, calculamos quantos dias faltam para o próximo
+            const daysUntilSunday = (7 - today.getDay()) % 7;
+            nextSunday.setDate(today.getDate() + daysUntilSunday);
+            
+            // Formata a data para exibir no formato DD/MM
+            const day = String(nextSunday.getDate()).padStart(2, '0');
+            const month = String(nextSunday.getMonth() + 1).padStart(2, '0');
+            
+            document.getElementById('next-sunday-date').innerText = `${day}/${month}`;
         }
         
         function renderBirthdays() {
@@ -1227,12 +1275,23 @@
             db.ref('chamados').push(alertData).then(() => alert(`📢 Enviado: ${name}`)).catch(e => alert("Erro ao enviar."));
         }
 
-        function generateDateFilters(containerId, callback, currentSelectedDate) {
+        function generateDateFilters(containerId, callback, currentSelectedDate, hidePastDates = false) {
             const container = document.getElementById(containerId); 
             if(!container) return;
             container.innerHTML = '';
             
+            // Pega a data de hoje e zera as horas para comparar corretamente
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
             allDates.forEach(date => { 
+                // Se hidePastDates for verdadeiro, verifica se a data já passou
+                if (hidePastDates) {
+                    const parts = date.split('/');
+                    const dateObj = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+                    if (dateObj < today) return; // Pula esta data e não cria o botão
+                }
+
                 const btn = document.createElement('button'); 
                 btn.className = 'pill-btn'; 
                 if (currentSelectedDate === date) btn.classList.add('active');
@@ -1308,14 +1367,77 @@
         function openEditScheduleModal(roomKey, index) { document.getElementById('modalFormTitle').innerText = "✏️ Trocar / Editar Escala"; document.getElementById('formMode').value = "edit"; const item = scheduleData[roomKey].schedules[index]; document.getElementById('modalRoomSelect').value = roomKey; document.getElementById('modalRoomSelect').disabled = true; document.getElementById('editRoomKey').value = roomKey; document.getElementById('editIndex').value = index; document.getElementById('modalDate').value = formatDateToInput(item.date); document.getElementById('modalLesson').value = item.lesson; renderTeacherSelectionList(item.teachers, roomsData[roomKey].name); document.getElementById('scheduleFormModal').classList.add('active'); }
         function closeScheduleFormModal() { document.getElementById('scheduleFormModal').classList.remove('active'); }
 
-        function updateTeacherListByRoomSelect() { const roomKey = document.getElementById('modalRoomSelect').value; if(!roomKey) return; renderTeacherSelectionList([], roomsData[roomKey].name); }
+        // Nova função para descobrir quem já trabalha neste dia
+        function getTeachersScheduledOnDate(dateString) {
+            let scheduled = [];
+            if (!dateString) return scheduled;
+            
+            Object.keys(scheduleData).forEach(roomKey => {
+                if (scheduleData[roomKey] && scheduleData[roomKey].schedules) {
+                    scheduleData[roomKey].schedules.forEach(sc => {
+                        if (sc.date === dateString) {
+                            scheduled = scheduled.concat(sc.teachers);
+                        }
+                    });
+                }
+            });
+            return scheduled;
+        }
+
+        function updateTeacherListByRoomSelect() { 
+            const roomKey = document.getElementById('modalRoomSelect').value; 
+            if(!roomKey) {
+                document.getElementById('teacherSelectionList').innerHTML = '<div style="padding:15px; text-align:center; color:#aaa;">Selecione uma sala primeiro.</div>';
+                return; 
+            }
+            
+            // Pega quem já estava marcado na tela para não perder a seleção ao trocar a data
+            const checkedNodes = document.querySelectorAll('.chk-teacher:checked');
+            let currentSelected = [];
+            if(checkedNodes.length > 0) {
+                currentSelected = Array.from(checkedNodes).map(cb => cb.value);
+            }
+            
+            renderTeacherSelectionList(currentSelected, roomsData[roomKey].name); 
+        }
 
         function renderTeacherSelectionList(selectedTeachers = [], filterRoomName = null) {
-            const container = document.getElementById('teacherSelectionList'); container.innerHTML = '';
+            const container = document.getElementById('teacherSelectionList'); 
+            container.innerHTML = '';
+            
+            // Pega a data que está preenchida no modal agora
+            const rawDate = document.getElementById('modalDate').value;
+            const dateFormatted = formatDateFromInput(rawDate);
+            
+            // Busca todos os professores ocupados nesse dia
+            const alreadyScheduled = getTeachersScheduledOnDate(dateFormatted);
+
             const sortedTeachers = [...fixedTeachersData].sort((a,b) => a.name.localeCompare(b.name));
+            
             sortedTeachers.forEach(t => {
                 if (filterRoomName && t.room !== filterRoomName && !selectedTeachers.includes(t.name)) return;
-                const isChecked = selectedTeachers.includes(t.name) ? 'checked' : ''; const label = document.createElement('label'); label.className = 'teacher-select-item'; label.innerHTML = `<input type="checkbox" class="chk-teacher" value="${t.name}" ${isChecked}><img src="${getTeacherPhotoUrl(t)}" onerror="this.src='https://ui-avatars.com/api/?name=${t.name}&background=random'"><span style="color:var(--text-main);">${t.name}</span><small>${t.room || 'Geral'}</small>`; container.appendChild(label);
+                
+                const isChecked = selectedTeachers.includes(t.name) ? 'checked' : '';
+                
+                // Checa se o professor está na lista de ocupados
+                const isBusy = alreadyScheduled.includes(t.name);
+                const extraClass = isBusy ? 'already-scheduled' : '';
+                const badge = isBusy ? '<span class="badge-scheduled">Já Escalado(a)</span>' : '';
+
+                const label = document.createElement('label'); 
+                label.className = `teacher-select-item ${extraClass}`; 
+                label.innerHTML = `
+                    <input type="checkbox" class="chk-teacher" value="${t.name}" ${isChecked}>
+                    <img src="${getTeacherPhotoUrl(t)}" onerror="this.src='https://ui-avatars.com/api/?name=${t.name}&background=random'">
+                    <div style="display:flex; flex-direction:column; width:100%;">
+                        <div style="display:flex; align-items:center;">
+                            <span style="color:var(--text-main); font-weight:700;">${t.name}</span>
+                            ${badge}
+                        </div>
+                        <small style="color:#9ca3af; font-size:0.75rem;">${t.room || 'Geral'}</small>
+                    </div>
+                `; 
+                container.appendChild(label);
             });
         }
 
@@ -1535,7 +1657,73 @@
                 alert("✅ Dados salvos com sucesso!");
             }).catch(e => alert("Erro ao salvar: " + e.message));
         }
-        async function submitRegistration() { alert("Cadastro realizado (Simulação)"); toggleNewForm(); }
+        async function submitRegistration() {
+            const name = document.getElementById('regName').value.trim();
+            const dob = document.getElementById('regDob').value;
+            
+            if (!name) {
+                alert("Por favor, preencha o nome!");
+                return;
+            }
+
+            // Cria um nome seguro para salvar no Firebase (sem caracteres especiais proibidos)
+            const safeName = name.replace(/[.#$[\]]/g, ''); 
+            let nodePath = '';
+            
+            // isNew: true avisa o sistema que não é só uma edição, mas uma pessoa nova
+            let payload = { name: name, dob: dob, isNew: true };
+
+            if (currentAdminTab === 'alunos') {
+                const guardian = document.getElementById('regGuardian').value;
+                const phone = document.getElementById('regPhone').value;
+                const roomVal = document.getElementById('regRoom').value; 
+                
+                // Corrige o nome da sala para bater com o banco de dados interno
+                let roomKey = roomVal.toLowerCase();
+                if(roomKey === 'berçário') roomKey = 'berçario';
+
+                payload.guardian = guardian;
+                payload.phone = phone;
+                payload.photo = ""; // Usa avatar automático
+                
+                nodePath = `dados_extras/alunos/${roomKey}/${safeName}`;
+            } else {
+                const phone = document.getElementById('regTeacherPhone').value;
+                const room = document.getElementById('regTeacherRoom').value;
+                
+                payload.phone = phone;
+                payload.room = room;
+                payload.photo = ""; // Usa avatar automático
+                
+                nodePath = `dados_extras/professores/${safeName}`;
+            }
+
+            // Muda o texto do botão para dar feedback
+            const btn = document.querySelector('#adminFormContainer .btn-success');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            try {
+                // Salva no banco de dados
+                await db.ref(nodePath).update(payload);
+                alert("✅ Cadastro salvo com sucesso!");
+                
+                // Limpa os campos após salvar
+                document.getElementById('regName').value = '';
+                document.getElementById('regDob').value = '';
+                document.getElementById('regGuardian').value = '';
+                document.getElementById('regPhone').value = '';
+                document.getElementById('regTeacherPhone').value = '';
+                
+                toggleNewForm(); // Fecha o formulário
+            } catch (error) {
+                alert("Erro ao salvar: " + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
 
         // ============================================
         // SISTEMA: IMERSÃO BÍBLICA (PAINEL ADMIN)
@@ -1591,6 +1779,60 @@
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a");
             link.setAttribute("href", url); link.setAttribute("download", "Pontuacao_Imersao_Biblica.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
+
+        // ============================================
+        // RESETAR ESCALAS FUTURAS (MANTENDO HISTÓRICO)
+        // ============================================
+        function limparEscalasFuturas() {
+            if(!confirm("🚨 ATENÇÃO: Tem certeza que deseja apagar todas as escalas FUTURAS? \n\nOs registros passados (Histórico) serão mantidos.")) return;
+
+            const btn = document.querySelector('#adminSchedulePanel .btn-danger');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Apagando...';
+            btn.disabled = true;
+
+            // Pega a data de hoje, zerando as horas para comparar corretamente
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            db.ref('escalas').once('value', snapshot => {
+                const data = snapshot.val();
+                if(!data) {
+                    alert("Não há escalas para limpar.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                let newData = {};
+                let apagadas = 0;
+
+                Object.keys(data).forEach(roomKey => {
+                    // Filtra mantendo apenas as datas que são MENORES que hoje
+                    newData[roomKey] = data[roomKey].filter(sc => {
+                        const parts = sc.date.split('/');
+                        const scDate = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+                        
+                        if (scDate >= today) {
+                            apagadas++;
+                            return false; // Remove da lista
+                        }
+                        return true; // Mantém no histórico
+                    });
+                });
+
+                // Envia os dados filtrados de volta pro Firebase
+                db.ref('escalas').set(newData).then(() => {
+                    alert(`✅ Sucesso! ${apagadas} escalas futuras foram removidas do sistema. O histórico está a salvo.`);
+                }).catch(e => {
+                    alert("Erro ao limpar escalas: " + e.message);
+                }).finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            });
+        }
     </script>
 </body>
 </html>
+
