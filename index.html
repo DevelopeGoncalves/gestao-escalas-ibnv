@@ -161,6 +161,47 @@
             font-size: 0.75rem;
             padding-bottom: 20px;
         }
+
+        /* --- ESTILOS DO SUBMENU (M. INFANTIL) --- */
+        .card.infantil {
+            cursor: pointer; /* Mantém o visual clicável */
+        }
+        .sub-menu {
+            display: none; /* Escondido por padrão */
+            flex-direction: column;
+            width: 100%;
+            margin-top: 15px;
+            gap: 10px;
+            animation: fadeInDown 0.3s ease;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            padding-top: 15px;
+        }
+        .sub-menu.active {
+            display: flex; /* Mostra quando ativado */
+        }
+        .sub-link {
+            background: rgba(0,0,0,0.04);
+            padding: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .sub-link:active {
+            transform: scale(0.98);
+        }
+        .sub-link i {
+            color: #f1c40f;
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -180,12 +221,24 @@
                 <span class="btn-acessar">Acessar</span>
             </a>
 
-            <a href="https://developegoncalves.github.io/gestao-escalas-ibnv/infantil.html" class="card infantil" target="_blank">
+            <div class="card infantil" onclick="toggleInfantil(event)">
                 <div class="icon-box"><i class="fa-solid fa-children"></i></div>
                 <h2>M. Infantil</h2>
                 <p>Chamada de pais e gestão das crianças no sistema.</p>
-                <span class="btn-acessar">Acessar</span>
-            </a>
+                <span class="btn-acessar" id="btn-infantil-text">Opções <i class="fas fa-chevron-down"></i></span>
+                
+                <div class="sub-menu" id="submenu-infantil">
+                    <a href="https://developegoncalves.github.io/gestao-escalas-ibnv/infantil.html" class="sub-link" target="_blank">
+                        <i class="fas fa-user-shield"></i> Painel Liderança
+                    </a>
+                    <a href="https://developegoncalves.github.io/gestao-escalas-ibnv/familia-em-campo.html" class="sub-link" target="_blank">
+                        <i class="fas fa-campground"></i> Família em Campo
+                    </a>
+                    <a href="https://developegoncalves.github.io/gestao-escalas-ibnv/formulario_pais.html" class="sub-link" target="_blank">
+                        <i class="fas fa-clipboard-list"></i> Formulário Pais
+                    </a>
+                </div>
+            </div>
 
             <a href="https://mediaflowv3.netlify.app/" class="card multimidia" target="_blank">
                 <div class="icon-box"><i class="fa-solid fa-sliders"></i></div>
@@ -236,6 +289,30 @@
         </footer>
     </div>
 
+    <script>
+        function toggleInfantil(event) {
+            // Se o usuário clicou em um dos links internos, não fazemos nada (deixa o link abrir)
+            if(event.target.closest('.sub-link')) return;
+
+            const submenu = document.getElementById('submenu-infantil');
+            const btnText = document.getElementById('btn-infantil-text');
+            
+            // Liga/Desliga o submenu
+            submenu.classList.toggle('active');
+            
+            // Muda a setinha e o texto do botão principal
+            if(submenu.classList.contains('active')) {
+                btnText.innerHTML = 'Fechar <i class="fas fa-chevron-up"></i>';
+                btnText.style.background = '#fdfdfd';
+                btnText.style.color = '#333';
+                btnText.style.border = '1px solid #f1c40f';
+            } else {
+                btnText.innerHTML = 'Opções <i class="fas fa-chevron-down"></i>';
+                btnText.style.background = '#f1c40f';
+                btnText.style.color = '#333';
+                btnText.style.border = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
-
