@@ -322,17 +322,18 @@
             let d = new Date(); d.setDate(d.getDate() - d.getDay()); 
             for(let i=0; i<4; i++) {
                 let dateStr = d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+                let safeVal = dateStr.replace(/\//g, '-'); // MÁGICA AQUI: Troca / por - para o Firebase aceitar
                 let text = i === 0 ? `👉 ${dateStr} (Hoje)` : `📅 ${dateStr}`;
-                select.innerHTML += `<option value="${dateStr}">${text}</option>`;
+                select.innerHTML += `<option value="${safeVal}">${text}</option>`;
                 d.setDate(d.getDate() - 7);
             }
         }
 
         function aplicarTravasDeHorario() {
-            const dateSelecionada = document.getElementById('sunday-date').value;
-            const hojeStr = getHojeFormatado();
+            const safeDateSelecionada = document.getElementById('sunday-date').value;
+            const hojeStr = getHojeFormatado().replace(/\//g, '-'); // Garante que a data de hoje também use hífen
             const agora = new Date(); const diaSemana = agora.getDay(); const hora = agora.getHours();
-            const isHoje = (dateSelecionada === hojeStr); const isDomingo = (diaSemana === 0);
+            const isHoje = (safeDateSelecionada === hojeStr); const isDomingo = (diaSemana === 0);
 
             const ebdLiberado = isHoje && isDomingo && (hora >= 9 && hora < 11);
             const cultoAtivLiberado = isHoje && isDomingo && (hora >= 18 && hora < 20);
@@ -430,10 +431,20 @@
             document.getElementById('chk-gin-3').checked = data.gincanas.g3 || false; document.getElementById('chk-gin-4').checked = data.gincanas.g4 || false;
 
             let total = 0;
-            if(data.history) Object.values(data.history).forEach(dia => total += dia.pts);
+            
+            // CORREÇÃO: Só soma se o dado gravado for válido e for número de verdade
+            if(data.history) {
+                Object.values(data.history).forEach(dia => {
+                    if(dia && typeof dia.pts === 'number') total += dia.pts;
+                });
+            }
             if(data.gincanas.g1) total += 5; if(data.gincanas.g2) total += 5; if(data.gincanas.g3) total += 5; if(data.gincanas.g4) total += 10;
             
-            db.ref(`imersao_biblica_scores/${currentKidId}/total`).set(total);
+            // BLINDAGEM: Salva no Firebase SÓ se o total for um número limpo!
+            if(!isNaN(total)) {
+                db.ref(`imersao_biblica_scores/${currentKidId}/total`).set(total);
+            }
+            
             document.getElementById('display-total-points').innerText = total;
             document.getElementById('progress-bar').style.width = Math.min((total / 50) * 100, 100) + '%';
             document.getElementById('ms-10').classList.toggle('reached', total >= 10); document.getElementById('ms-25').classList.toggle('reached', total >= 25); document.getElementById('ms-50').classList.toggle('reached', total >= 50);
