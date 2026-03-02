@@ -413,9 +413,29 @@
             const ebd = document.getElementById('chk-ebd').checked;
             const culto = document.getElementById('chk-culto').checked;
             const atividade = document.getElementById('chk-atividade').checked;
-            let ptsDia = (ebd ? 1 : 0) + (culto ? 1 : 0) + (atividade ? 1 : 0);
 
-            db.ref(`imersao_biblica_scores/${currentKidId}/history/${dateStr}`).set({ ebd: ebd, culto: culto, atividade: atividade, pts: ptsDia }).then(() => { alert(`✅ Salvo com sucesso!`); });
+            const historyRef = db.ref(`imersao_biblica_scores/${currentKidId}/history/${dateStr}`);
+            
+            historyRef.once('value', snapshot => {
+                let diaData = snapshot.val() || {};
+                
+                // Resgata os pontos que o professor já deu neste dia (se houver)
+                let profPts = diaData.presenca_prof || 0;
+                
+                // Soma os pontos marcados pelos pais com os do professor
+                let ptsDia = (ebd ? 1 : 0) + (culto ? 1 : 0) + (atividade ? 1 : 0) + profPts;
+
+                // Usa .update() para atualizar apenas a parte dos pais, preservando o professor
+                historyRef.update({ 
+                    ebd: ebd, 
+                    culto: culto, 
+                    atividade: atividade, 
+                    pts: ptsDia,
+                    presenca_prof: profPts 
+                }).then(() => { 
+                    alert(`✅ Salvo com sucesso!`); 
+                });
+            });
         }
 
         function salvarGincanas() {
