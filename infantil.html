@@ -1158,11 +1158,18 @@
         
         async function submitCall() {
             const btn = document.getElementById('btn-submit-chamada');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; 
+            btn.disabled = true;
             
             const room = roomsData[selectedRoomKeyChamada];
-            const presentNames = Array.from(document.querySelectorAll('.kid-card.present')).map(el => el.dataset.name);
+            const presentNodes = document.querySelectorAll('.kid-card.present');
+            const presentNames = Array.from(presentNodes).map(el => el.dataset.name);
             const dateVal = document.getElementById('dateInput').value;
+            
+            // Formata a data (DD-MM-YYYY) para sincronizar com o app das famílias
+            const [y, m, d] = dateVal.split('-');
+            const safeDate = `${d}-${m}-${y}`;
+
             const teacherVal = document.getElementById('teacherName').value;
             const dateFormatted = formatDateFromInput(dateVal);
 
@@ -1173,8 +1180,44 @@
             };
 
             try { 
+                // 1. Salva a chamada no histórico
                 await db.ref('chamadas').push(chamadaData);
-                alert(`✅ Chamada registrada no sistema!`); 
+
+                // 2. INTEGRAÇÃO IMERSÃO: Ponto exclusivo de "Presença do Aluno"
+                const roomKids = kidsData[selectedRoomKeyChamada] || [];
+                
+                presentNodes.forEach(node => {
+                    const kidName = node.dataset.name;
+                    const kidIndex = roomKids.findIndex(k => k.name === kidName);
+                    
+                    if (kidIndex !== -1) {
+                        const kidId = `${selectedRoomKeyChamada}_${kidIndex}`;
+                        const historyRef = db.ref(`imersao_biblica_scores/${kidId}/history/${safeDate}`);
+
+                        historyRef.once('value', snapshot => {
+                            let diaData = snapshot.val() || { ebd: false, culto: false, atividade: false, presenca_prof: 0, pts: 0 };
+                            
+                            // Adiciona +1 ponto de presença (se houver chamada de manhã e de noite, soma 2)
+                            diaData.presenca_prof = (diaData.presenca_prof || 0) + 1;
+                            
+                            // Recalcula o total do dia somando Pais + Professor
+                            let ptsPais = (diaData.ebd ? 1 : 0) + (diaData.culto ? 1 : 0) + (diaData.atividade ? 1 : 0);
+                            diaData.pts = ptsPais + diaData.presenca_prof;
+
+                            // Atualiza os dados sem apagar o que os pais marcaram
+                            historyRef.update(diaData);
+
+                            // Atualiza a barra de progresso (Total)
+                            const totalRef = db.ref(`imersao_biblica_scores/${kidId}/total`);
+                            totalRef.once('value', totSnap => {
+                                let total = totSnap.val() || 0;
+                                totalRef.set(total + 1);
+                            });
+                        });
+                    }
+                });
+
+                alert(`✅ Chamada enviada e pontos de presença somados!`); 
                 document.querySelectorAll('.kid-card').forEach(c => c.classList.remove('present')); 
                 document.getElementById('teacherName').value = ''; 
                 document.getElementById('extraKidName').value = '';
@@ -1182,7 +1225,9 @@
             } catch(e) { 
                 alert("Erro ao enviar chamada."); console.error(e);
             }
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Chamada'; btn.disabled = false;
+            
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Chamada'; 
+            btn.disabled = false;
         }
 
         // ============================================
