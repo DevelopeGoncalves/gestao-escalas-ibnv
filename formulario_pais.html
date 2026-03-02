@@ -109,6 +109,25 @@
         }
         .btn-success:active { transform: scale(0.98); }
 
+        /* ESTILOS PARA CRIANÇAS JÁ CADASTRADAS */
+        .kid-card.registered {
+            opacity: 0.65;
+            cursor: not-allowed;
+            border-color: #38b2ac;
+            background-color: #e6fffa;
+        }
+        .kid-card.registered:active { transform: none; }
+        .badge-cadastrado {
+            background: #38b2ac;
+            color: white;
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 900;
+            margin-top: 6px;
+            display: inline-block;
+        }
+
         /* MODAL DE SENHA E SUCESSO */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-overlay.active { display: flex; }
@@ -179,6 +198,7 @@
                     </div>
 
                     <button type="submit" class="btn-success" id="btn-enviar">Salvar Cadastro <i class="fas fa-check-circle"></i></button>
+                    <button type="button" class="btn-success" id="btn-excluir" style="display: none; background: #e53e3e; margin-top: 10px;" onclick="excluirCadastro()">Excluir Cadastro <i class="fas fa-trash"></i></button>
                 </form>
             </div>
         </div>
@@ -202,9 +222,10 @@
             
             <input type="password" id="adminSenha" placeholder="Senha" style="width:100%; padding:15px; border-radius:12px; border:2px solid #e2e8f0; text-align:center; font-size:1.2rem; font-weight:900; margin-bottom:15px; outline:none;">
             
-            <div style="display:flex; gap:10px;">
-                <button class="btn-success" style="background:#e2e8f0; color:#4a5568; box-shadow:none;" onclick="closeAdminModal()">Cancelar</button>
-                <button class="btn-success" onclick="exportarCadastros()">Baixar Planilha</button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn-success" style="background:#e2e8f0; color:#4a5568; box-shadow:none; width: 100%; margin-bottom: 5px;" onclick="closeAdminModal()">Cancelar</button>
+                <button class="btn-success" style="flex:1; background: #38b2ac; font-size: 0.9rem; padding: 12px;" onclick="exportarCadastros()"><i class="fas fa-file-excel"></i> Planilha</button>
+                <button class="btn-success" style="flex:1; background: #e53e3e; font-size: 0.9rem; padding: 12px;" onclick="ativarModoAdmin()"><i class="fas fa-tools"></i> Editar Dados</button>
             </div>
         </div>
     </div>
@@ -240,6 +261,9 @@
 
         let selectedKid = null;
         let currentFilter = 'Todos';
+        let alunosCadastrados = new Map(); // Guarda o ID e os dados do Firebase
+        let isAdmin = false;               // Controla se a senha foi digitada
+        let currentEditKey = null;         // Guarda o ID de quem está sendo editado
 
         window.onload = () => {
             const container = document.getElementById('room-filters');
@@ -259,7 +283,19 @@
                 container.appendChild(btn);
             });
 
-            applyFilters();
+            // Busca no Firebase e guarda os dados completos
+            db.ref('formularios_pais').on('value', snapshot => {
+                alunosCadastrados.clear();
+                const data = snapshot.val();
+                if (data) {
+                    Object.entries(data).forEach(([key, f]) => {
+                        if (f.aluno) {
+                            alunosCadastrados.set(f.aluno, { key: key, ...f });
+                        }
+                    });
+                }
+                applyFilters(); 
+            });
         };
 
         function setFilter(filterVal, btnElement) {
@@ -293,16 +329,36 @@
             }
 
             // Renderiza
+            // Renderiza
             filteredKids.forEach(kid => {
-                const div = document.createElement('div'); div.className = 'kid-card';
+                const isRegistered = alunosCadastrados.has(kid.name);
+                const div = document.createElement('div'); 
+                div.className = isRegistered ? 'kid-card registered' : 'kid-card';
                 const imgSrc = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
                 
+                let badgeHtml = isRegistered ? `<div class="badge-cadastrado"><i class="fas fa-check"></i> Cadastrado</div>` : '';
+
                 div.innerHTML = `
                     <img src="${imgSrc}" class="kid-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random&color=fff'">
                     <div class="kid-name">${kid.name}</div>
                     <div class="kid-room-tag">${kid.roomName}</div>
+                    ${badgeHtml}
                 `;
-                div.onclick = () => abrirFormulario(kid.name, kid.roomKey, kid.roomName, imgSrc);
+                
+                div.onclick = () => {
+                    if(isRegistered) {
+                        if(isAdmin) {
+                            // Se for admin, abre para edição
+                            editarFormulario(kid.name, kid.roomKey, kid.roomName, imgSrc);
+                        } else {
+                            // Se for os pais, exibe o aviso
+                            alert(`O cadastro de ${kid.name} já foi realizado com sucesso! ✅`);
+                        }
+                    } else {
+                        // Se não estiver cadastrado, abre o formulário limpo
+                        abrirFormulario(kid.name, kid.roomKey, kid.roomName, imgSrc);
+                    }
+                };
                 container.appendChild(div);
             });
         }
@@ -324,6 +380,12 @@
             document.getElementById('step-2').classList.remove('active');
             document.getElementById('step-1').classList.add('active');
             document.getElementById('btn-voltar').style.display = 'none';
+            
+            // Reseta o formulário e os botões
+            document.getElementById('cadastroForm').reset();
+            currentEditKey = null;
+            document.getElementById('btn-enviar').innerHTML = 'Salvar Cadastro <i class="fas fa-check-circle"></i>';
+            document.getElementById('btn-excluir').style.display = 'none';
         }
 
         function enviarFormulario(event) {
@@ -349,10 +411,18 @@
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
-            db.ref('formularios_pais').push(formData).then(() => {
-                
-                // 2. Atualiza o cadastro oficial do aluno no Painel Admin (Sincronização Mágica!)
-                const safeName = selectedKid.name.replace(/[.#$[\]]/g, ''); 
+            const safeName = selectedKid.name.replace(/[.#$[\]]/g, ''); 
+            let requisicao;
+
+            // Se currentEditKey existir, ele ATUALIZA. Se não, ele CRIA (push).
+            if (currentEditKey) {
+                requisicao = db.ref(`formularios_pais/${currentEditKey}`).update(formData);
+            } else {
+                requisicao = db.ref('formularios_pais').push(formData);
+            }
+
+            requisicao.then(() => {
+                // Sincroniza os dados no painel da turma (Magia acontecendo aqui!)
                 db.ref(`dados_extras/alunos/${selectedKid.roomKey}/${safeName}`).update({
                     dob: nasc,
                     phone: tel,
@@ -363,8 +433,58 @@
 
             }).catch(e => {
                 alert("Ocorreu um erro. Tente novamente.");
-                btn.innerHTML = 'Salvar Cadastro <i class="fas fa-check-circle"></i>';
+                btn.innerHTML = currentEditKey ? 'Atualizar Dados <i class="fas fa-sync"></i>' : 'Salvar Cadastro <i class="fas fa-check-circle"></i>';
                 btn.disabled = false;
+            });
+        }
+
+        function ativarModoAdmin() {
+            const senha = document.getElementById('adminSenha').value;
+            if(senha !== '1234') { alert("Senha incorreta!"); return; }
+            
+            isAdmin = true;
+            closeAdminModal();
+            
+            // Muda a cor do cabeçalho para o admin saber que está liberado
+            document.querySelector('.app-header').style.background = '#e53e3e';
+            document.querySelector('.app-header h1').innerHTML = '🛠️ Modo Admin Ativo';
+            alert("Modo de Edição ativado! Clique nas crianças com selo 'Cadastrado' para editar ou excluir os dados.");
+        }
+
+        function editarFormulario(name, roomKey, roomName, photo) {
+            selectedKid = { name, roomKey, roomName };
+            const dadosSalvos = alunosCadastrados.get(name);
+            currentEditKey = dadosSalvos.key; // Guarda o ID do Firebase para atualizar/apagar a pessoa certa
+
+            document.getElementById('form-kid-img').src = photo;
+            document.getElementById('form-kid-name').innerText = name;
+            document.getElementById('form-kid-room').innerText = roomName;
+
+            // Preenche o formulário com os dados que já estavam no banco
+            document.getElementById('inp-responsavel').value = dadosSalvos.responsavel || '';
+            document.getElementById('inp-telefone').value = dadosSalvos.telefone || '';
+            document.getElementById('inp-nascimento').value = dadosSalvos.nascimento || '';
+            document.getElementById('inp-gincana').value = dadosSalvos.gincana || '';
+
+            // Troca visual do botão de Salvar e mostra o de Excluir
+            document.getElementById('btn-enviar').innerHTML = 'Atualizar Dados <i class="fas fa-sync"></i>';
+            document.getElementById('btn-excluir').style.display = 'block';
+
+            document.getElementById('step-1').classList.remove('active');
+            document.getElementById('step-2').classList.add('active');
+            document.getElementById('btn-voltar').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function excluirCadastro() {
+            if(!confirm("⚠️ Tem certeza que deseja APAGAR este cadastro? Esta ação não pode ser desfeita.")) return;
+
+            // Deleta o registro lá do banco de dados
+            db.ref(`formularios_pais/${currentEditKey}`).remove().then(() => {
+                alert("Cadastro excluído com sucesso!");
+                voltarParaSelecao();
+            }).catch(e => {
+                alert("Erro ao excluir. Tente novamente.");
             });
         }
 
