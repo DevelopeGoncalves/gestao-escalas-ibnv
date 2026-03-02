@@ -317,38 +317,83 @@
             let d = new Date(); return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
         }
 
-        function popularSelectDomingos() {
-            const select = document.getElementById('sunday-date'); select.innerHTML = '';
-            let d = new Date(); d.setDate(d.getDate() - d.getDay()); 
-            for(let i=0; i<4; i++) {
-                let dateStr = d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
-                let safeVal = dateStr.replace(/\//g, '-'); // MÁGICA AQUI: Troca / por - para o Firebase aceitar
-                let text = i === 0 ? `👉 ${dateStr} (Hoje)` : `📅 ${dateStr}`;
-                select.innerHTML += `<option value="${safeVal}">${text}</option>`;
-                d.setDate(d.getDate() - 7);
+        let dataOnlineAtual = new Date();
+
+        // Busca a hora oficial online
+        async function fetchDataOnline() {
+            try {
+                const res = await fetch('https://worldtimeapi.org/api/timezone/America/Sao_Paulo');
+                const data = await res.json();
+                dataOnlineAtual = new Date(data.datetime);
+            } catch (e) {
+                dataOnlineAtual = new Date(); // Se falhar, usa a do celular
             }
         }
 
+        async function popularSelectDomingos() {
+        await fetchDataOnline();
+        const select = document.getElementById('sunday-date'); 
+        select.innerHTML = '';
+        
+        let d = new Date(dataOnlineAtual);
+        // Encontra o último domingo (ou hoje, se hoje for domingo)
+        d.setDate(d.getDate() - d.getDay()); 
+        
+        // Pega a data exata de hoje para comparar
+        let hojeRealStr = dataOnlineAtual.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+
+        // Vamos gerar 4 opções: o domingo mais recente e os 3 próximos
+        for(let i=0; i<4; i++) {
+            let dateStr = d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            let safeVal = dateStr.replace(/\//g, '-');
+            
+            let text = `📅 ${dateStr}`;
+            if (i === 0) {
+                // Verifica se o primeiro item da lista é exatamente hoje
+                if (dateStr === hojeRealStr) {
+                    text = `👉 ${dateStr} (Hoje)`;
+                } else {
+                    text = `👉 ${dateStr} (Último Domingo)`;
+                }
+            } else {
+                // Coloca um aviso visual de que é um domingo futuro
+                text = `📅 ${dateStr} (Próximo)`;
+            }
+            
+            select.innerHTML += `<option value="${safeVal}">${text}</option>`;
+            
+            // A MÁGICA AQUI: Em vez de voltar no passado (-7), vamos avançar para o futuro (+7)
+            d.setDate(d.getDate() + 7); 
+        }
+        
+        if(currentKidId) carregarFormularioSemana();
+    }
+
         function aplicarTravasDeHorario() {
             const safeDateSelecionada = document.getElementById('sunday-date').value;
-            const hojeStr = getHojeFormatado().replace(/\//g, '-'); // Garante que a data de hoje também use hífen
-            const agora = new Date(); const diaSemana = agora.getDay(); const hora = agora.getHours();
-            const isHoje = (safeDateSelecionada === hojeStr); const isDomingo = (diaSemana === 0);
+            const hojeStr = dataOnlineAtual.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}).replace(/\//g, '-'); 
+            
+            const diaSemana = dataOnlineAtual.getDay(); 
+            const hora = dataOnlineAtual.getHours();
+            
+            const isHoje = (safeDateSelecionada === hojeStr); 
+            const isDomingo = (diaSemana === 0);
 
-            const ebdLiberado = isHoje && isDomingo && (hora >= 9 && hora < 11);
-            const cultoAtivLiberado = isHoje && isDomingo && (hora >= 18 && hora < 20);
+            // Pequena margem extra de tolerância (09h às 12h) e (17h às 22h)
+            const ebdLiberado = isHoje && isDomingo && (hora >= 9 && hora < 12);
+            const cultoAtivLiberado = isHoje && isDomingo && (hora >= 17 && hora < 22);
 
             document.getElementById('chk-ebd').disabled = !ebdLiberado;
             document.getElementById('item-ebd').classList.toggle('locked', !ebdLiberado);
-            document.getElementById('lock-msg-ebd').innerHTML = ebdLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 09h às 11h)';
+            document.getElementById('lock-msg-ebd').innerHTML = ebdLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 09h às 12h)';
 
             document.getElementById('chk-culto').disabled = !cultoAtivLiberado;
             document.getElementById('item-culto').classList.toggle('locked', !cultoAtivLiberado);
-            document.getElementById('lock-msg-culto').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 18h às 20h)';
+            document.getElementById('lock-msg-culto').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 17h às 22h)';
 
             document.getElementById('chk-atividade').disabled = !cultoAtivLiberado;
             document.getElementById('item-atividade').classList.toggle('locked', !cultoAtivLiberado);
-            document.getElementById('lock-msg-ativ').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 18h às 20h)';
+            document.getElementById('lock-msg-ativ').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 17h às 22h)';
 
             document.getElementById('btn-salvar-domingo').disabled = !isHoje;
         }
