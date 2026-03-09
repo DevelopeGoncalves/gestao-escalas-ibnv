@@ -280,8 +280,11 @@
 
         const kidsData = {}; const allKidsFlat = [];
         Object.keys(kidsRawData).forEach(roomKey => {
-            kidsData[roomKey] = kidsRawData[roomKey].map((kid, index) => {
-                const kidObj = { id: `${roomKey}_${index}`, name: kid.name, photo: kid.photo, roomKey: roomKey, room: roomsData[roomKey].name, icon: roomsData[roomKey].icon };
+            kidsData[roomKey] = kidsRawData[roomKey].map((kid) => {
+                // Cria o ID seguro baseado no nome, igual ao painel Admin!
+                const safeName = kid.name.replace(/[.#$[\]]/g, '');
+                
+                const kidObj = { id: `${roomKey}_${safeName}`, name: kid.name, photo: kid.photo, roomKey: roomKey, room: roomsData[roomKey].name, icon: roomsData[roomKey].icon };
                 allKidsFlat.push(kidObj); return kidObj;
             });
         });
