@@ -361,7 +361,7 @@
         <div id="editPersonModal" class="modal-overlay">
         <div class="modal-content">
             <h3 style="margin-top:0; color:var(--primary);"><i class="fas fa-user-edit"></i> Editar Dados</h3>
-            <p id="editPersonName" style="font-weight:800; margin-bottom: 15px; font-size: 1.1rem; color: var(--text-main);"></p>
+            <input type="text" id="editPersonNameInput" style="font-weight:800; margin-bottom: 15px; font-size: 1.1rem; color: var(--text-main); width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 12px; font-family: inherit; background: #f9fafb;">
             
             <input type="hidden" id="editPersonType">
             <input type="hidden" id="editPersonRoom">
@@ -1157,78 +1157,81 @@
         }
         
         async function submitCall() {
-            const btn = document.getElementById('btn-submit-chamada');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; 
-            btn.disabled = true;
+        const btn = document.getElementById('btn-submit-chamada');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; 
+        btn.disabled = true;
+        
+        const room = roomsData[selectedRoomKeyChamada];
+        const presentNodes = document.querySelectorAll('.kid-card.present');
+        const presentNames = Array.from(presentNodes).map(el => el.dataset.name);
+        const dateVal = document.getElementById('dateInput').value;
+        
+        // Formata a data (DD-MM-YYYY) para sincronizar com o app das famílias
+        const [y, m, d] = dateVal.split('-');
+        const safeDate = `${d}-${m}-${y}`;
+
+        const teacherVal = document.getElementById('teacherName').value;
+        const dateFormatted = formatDateFromInput(dateVal);
+
+        const chamadaData = {
+            room_name: room.name, room_key: selectedRoomKeyChamada,
+            lesson_date: dateFormatted, teacher_name: teacherVal,
+            kids_list: presentNames.join('; '), timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        try { 
+            // 1. Salva a chamada no histórico
+            await db.ref('chamadas').push(chamadaData);
+
+            // 2. INTEGRAÇÃO IMERSÃO: Ponto exclusivo de "Presença do Aluno"
+            const roomKids = kidsData[selectedRoomKeyChamada] || [];
             
-            const room = roomsData[selectedRoomKeyChamada];
-            const presentNodes = document.querySelectorAll('.kid-card.present');
-            const presentNames = Array.from(presentNodes).map(el => el.dataset.name);
-            const dateVal = document.getElementById('dateInput').value;
-            
-            // Formata a data (DD-MM-YYYY) para sincronizar com o app das famílias
-            const [y, m, d] = dateVal.split('-');
-            const safeDate = `${d}-${m}-${y}`;
-
-            const teacherVal = document.getElementById('teacherName').value;
-            const dateFormatted = formatDateFromInput(dateVal);
-
-            const chamadaData = {
-                room_name: room.name, room_key: selectedRoomKeyChamada,
-                lesson_date: dateFormatted, teacher_name: teacherVal,
-                kids_list: presentNames.join('; '), timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            try { 
-                // 1. Salva a chamada no histórico
-                await db.ref('chamadas').push(chamadaData);
-
-                // 2. INTEGRAÇÃO IMERSÃO: Ponto exclusivo de "Presença do Aluno"
-                const roomKids = kidsData[selectedRoomKeyChamada] || [];
+            presentNodes.forEach(node => {
+                const kidNameRaw = node.dataset.name;
+                const kidIndex = roomKids.findIndex(k => k.name === kidNameRaw);
                 
-                presentNodes.forEach(node => {
-                    const kidName = node.dataset.name;
-                    const kidIndex = roomKids.findIndex(k => k.name === kidName);
+                if (kidIndex !== -1) {
+                    // CORREÇÃO: Usa o nome seguro da criança como ID, não mais a posição
+                    const safeName = kidNameRaw.replace(/[.#$[\]]/g, '');
+                    const kidId = `${selectedRoomKeyChamada}_${safeName}`;
                     
-                    if (kidIndex !== -1) {
-                        const kidId = `${selectedRoomKeyChamada}_${kidIndex}`;
-                        const historyRef = db.ref(`imersao_biblica_scores/${kidId}/history/${safeDate}`);
+                    const historyRef = db.ref(`imersao_biblica_scores/${kidId}/history/${safeDate}`);
 
-                        historyRef.once('value', snapshot => {
-                            let diaData = snapshot.val() || { ebd: false, culto: false, atividade: false, presenca_prof: 0, pts: 0 };
-                            
-                            // Adiciona +1 ponto de presença (se houver chamada de manhã e de noite, soma 2)
-                            diaData.presenca_prof = (diaData.presenca_prof || 0) + 1;
-                            
-                            // Recalcula o total do dia somando Pais + Professor
-                            let ptsPais = (diaData.ebd ? 1 : 0) + (diaData.culto ? 1 : 0) + (diaData.atividade ? 1 : 0);
-                            diaData.pts = ptsPais + diaData.presenca_prof;
+                    historyRef.once('value', snapshot => {
+                        let diaData = snapshot.val() || { ebd: false, culto: false, atividade: false, presenca_prof: 0, pts: 0 };
+                        
+                        // Adiciona +1 ponto de presença (se houver chamada de manhã e de noite, soma 2)
+                        diaData.presenca_prof = (diaData.presenca_prof || 0) + 1;
+                        
+                        // Recalcula o total do dia somando Pais + Professor
+                        let ptsPais = (diaData.ebd ? 1 : 0) + (diaData.culto ? 1 : 0) + (diaData.atividade ? 1 : 0);
+                        diaData.pts = ptsPais + diaData.presenca_prof;
 
-                            // Atualiza os dados sem apagar o que os pais marcaram
-                            historyRef.update(diaData);
+                        // Atualiza os dados sem apagar o que os pais marcaram
+                        historyRef.update(diaData);
 
-                            // Atualiza a barra de progresso (Total)
-                            const totalRef = db.ref(`imersao_biblica_scores/${kidId}/total`);
-                            totalRef.once('value', totSnap => {
-                                let total = totSnap.val() || 0;
-                                totalRef.set(total + 1);
-                            });
+                        // Atualiza a barra de progresso (Total)
+                        const totalRef = db.ref(`imersao_biblica_scores/${kidId}/total`);
+                        totalRef.once('value', totSnap => {
+                            let total = totSnap.val() || 0;
+                            totalRef.set(total + 1);
                         });
-                    }
-                });
+                    });
+                }
+            });
 
-                alert(`✅ Chamada enviada e pontos de presença somados!`); 
-                document.querySelectorAll('.kid-card').forEach(c => c.classList.remove('present')); 
-                document.getElementById('teacherName').value = ''; 
-                document.getElementById('extraKidName').value = '';
-                checkCallFormValidity();
-            } catch(e) { 
-                alert("Erro ao enviar chamada."); console.error(e);
-            }
-            
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Chamada'; 
-            btn.disabled = false;
+            alert(`✅ Chamada enviada e pontos de presença somados!`); 
+            document.querySelectorAll('.kid-card').forEach(c => c.classList.remove('present')); 
+            document.getElementById('teacherName').value = ''; 
+            document.getElementById('extraKidName').value = '';
+            checkCallFormValidity();
+        } catch(e) { 
+            alert("Erro ao enviar chamada."); console.error(e);
         }
+        
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Chamada'; 
+        btn.disabled = false;
+    }
 
         // ============================================
         // VER HISTÓRICO DE CHAMADAS
@@ -1791,39 +1794,47 @@
         setTimeout(generateRoomFiltersImersao, 1000); 
 
         function renderImersaoAdmin() {
-            const container = document.getElementById('imersaoAdminGrid'); if(!container) return; container.innerHTML = '';
-            let allKidsImersao = [];
-            Object.keys(kidsData).forEach(roomKey => {
-                if (selectedImersaoAdminRoom && roomKey !== selectedImersaoAdminRoom) return; 
-                kidsData[roomKey].forEach((kid, index) => {
-                    let kidId = `${roomKey}_${index}`; let pontos = 0; if(imersaoDataAdmin[kidId]) pontos = imersaoDataAdmin[kidId].total || 0;
-                    allKidsImersao.push({ name: kid.name, room: roomsData[roomKey].name, photo: kid.photo, pts: pontos });
-                });
+        const container = document.getElementById('imersaoAdminGrid'); if(!container) return; container.innerHTML = '';
+        let allKidsImersao = [];
+        
+        Object.keys(kidsData).forEach(roomKey => {
+            if (selectedImersaoAdminRoom && roomKey !== selectedImersaoAdminRoom) return; 
+            kidsData[roomKey].forEach((kid) => {
+                // CORREÇÃO: Busca os pontos pelo nome seguro
+                let safeName = kid.name.replace(/[.#$[\]]/g, '');
+                let kidId = `${roomKey}_${safeName}`; 
+                let pontos = 0; if(imersaoDataAdmin[kidId]) pontos = imersaoDataAdmin[kidId].total || 0;
+                allKidsImersao.push({ name: kid.name, room: roomsData[roomKey].name, photo: kid.photo, pts: pontos });
             });
-            allKidsImersao.sort((a, b) => b.pts - a.pts);
-            if(allKidsImersao.length === 0) { container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #9ca3af; padding: 20px;">Nenhuma criança encontrada.</div>'; return; }
+        });
+        
+        allKidsImersao.sort((a, b) => b.pts - a.pts);
+        if(allKidsImersao.length === 0) { container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #9ca3af; padding: 20px;">Nenhuma criança encontrada.</div>'; return; }
 
-            allKidsImersao.forEach(k => {
-                const imgSrc = k.photo.startsWith('http') ? k.photo : `img/${k.photo}`;
-                container.innerHTML += `<div class="person-card" style="border-left: 5px solid var(--primary); align-items: center;"><img src="${imgSrc}" class="person-img" onerror="this.src='https://ui-avatars.com/api/?name=${k.name}&background=random'"><div class="person-info" style="flex:1; overflow:hidden;"><h4 style="margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${k.name}</h4><p style="margin:0; font-size:0.8rem; color:var(--text-muted);">${k.room}</p></div><div style="background: var(--success); color: white; padding: 8px 12px; border-radius: 12px; font-weight: 800; font-size: 1.1rem; text-align:center; min-width: 60px;">${k.pts}<br><span style="font-size:0.6rem; font-weight:700;">PTS</span></div></div>`;
-            });
-        }
+        allKidsImersao.forEach(k => {
+            const imgSrc = k.photo.startsWith('http') ? k.photo : `img/${k.photo}`;
+            container.innerHTML += `<div class="person-card" style="border-left: 5px solid var(--primary); align-items: center;"><img src="${imgSrc}" class="person-img" onerror="this.src='https://ui-avatars.com/api/?name=${k.name}&background=random'"><div class="person-info" style="flex:1; overflow:hidden;"><h4 style="margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${k.name}</h4><p style="margin:0; font-size:0.8rem; color:var(--text-muted);">${k.room}</p></div><div style="background: var(--success); color: white; padding: 8px 12px; border-radius: 12px; font-weight: 800; font-size: 1.1rem; text-align:center; min-width: 60px;">${k.pts}<br><span style="font-size:0.6rem; font-weight:700;">PTS</span></div></div>`;
+        });
+    }
 
         function exportImersaoCSV() {
-            let csvContent = "\uFEFFTURMA;ALUNO;PONTOS TOTAIS\n";
-            Object.keys(roomsData).forEach(roomKey => {
-                let kidsInRoom = [];
-                kidsData[roomKey].forEach((kid, index) => {
-                    let kidId = `${roomKey}_${index}`; let pontos = 0; if(imersaoDataAdmin[kidId]) pontos = imersaoDataAdmin[kidId].total || 0;
-                    kidsInRoom.push({ name: kid.name, room: roomsData[roomKey].name, pts: pontos });
-                });
-                kidsInRoom.sort((a, b) => a.name.localeCompare(b.name));
-                csvContent += `\n--- ${roomsData[roomKey].name.toUpperCase()} ---;;\n`;
-                kidsInRoom.forEach(k => { let safeName = k.name.replace(/;/g, '').replace(/,/g, ''); csvContent += `${k.room};${safeName};${k.pts}\n`; });
+        let csvContent = "\uFEFFTURMA;ALUNO;PONTOS TOTAIS\n";
+        Object.keys(roomsData).forEach(roomKey => {
+            let kidsInRoom = [];
+            kidsData[roomKey].forEach((kid) => {
+                // CORREÇÃO: Busca os pontos pelo nome seguro na hora de exportar
+                let safeName = kid.name.replace(/[.#$[\]]/g, '');
+                let kidId = `${roomKey}_${safeName}`; 
+                let pontos = 0; if(imersaoDataAdmin[kidId]) pontos = imersaoDataAdmin[kidId].total || 0;
+                kidsInRoom.push({ name: kid.name, room: roomsData[roomKey].name, pts: pontos });
             });
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a");
-            link.setAttribute("href", url); link.setAttribute("download", "Pontuacao_Imersao_Biblica.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        }
+            kidsInRoom.sort((a, b) => a.name.localeCompare(b.name));
+            csvContent += `\n--- ${roomsData[roomKey].name.toUpperCase()} ---;;\n`;
+            kidsInRoom.forEach(k => { let safeNameExport = k.name.replace(/;/g, '').replace(/,/g, ''); csvContent += `${k.room};${safeNameExport};${k.pts}\n`; });
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a");
+        link.setAttribute("href", url); link.setAttribute("download", "Pontuacao_Imersao_Biblica.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
 
         // ============================================
         // RESETAR ESCALAS FUTURAS (MANTENDO HISTÓRICO)
