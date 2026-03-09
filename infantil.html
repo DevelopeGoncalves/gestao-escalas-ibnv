@@ -383,8 +383,9 @@
             </div>
 
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn btn-danger" onclick="closeEditPersonModal()">Cancelar</button>
-                <button class="btn btn-success" onclick="savePersonEdit()">Salvar Dados</button>
+                <button class="btn btn-danger" style="flex: 0.3; background: #fee2e2; color: #ef4444;" onclick="deletePerson()"><i class="fas fa-trash"></i></button>
+                <button class="btn" style="background: #e5e7eb; color: #4b5563; flex: 1;" onclick="closeEditPersonModal()">Cancelar</button>
+                <button class="btn btn-success" style="flex: 1;" onclick="savePersonEdit()">Salvar</button>
             </div>
         </div>
     </div>
@@ -678,7 +679,7 @@
                 { id: 77, name: "Raphaela", photo: "raphaela_omega.png" }, { id: 78, name: "Éric", photo: "eric_omega.png" }, { id: 79, name: "Lavínia", photo: "lavinia_omega.png" },
                 { id: 80, name: "Pietra", photo: "pietra_omega.png" }, { id: 81, name: "Sophia", photo: "sophia_omega.png" }, { id: 82, name: "João Miguel", photo: "joao_miguel_omega.png" },
                 { id: 83, name: "Maria", photo: "maria_omega.png" }, { id: 84, name: "Pedro", photo: "pedro_omega.png" }, { id: 85, name: "Emilly sophia", photo: "emillysophia_omega.png" },
-                { id: 86, name: "Kethelyn Lorrana", photo: "KethelynLorrana_omega.png" }, { id: 87, name: "Yasmim da Silva", photo: "Yasmim_omega.png" }, { id: 88, name: "Saulo", photo: "saulo_omega.png" },
+                { id: 86, name: "Kethelyn Lorrana", photo: "KethelynLorrana_omega.png" }, { id: 87, name: "Yasmim da Silva", photo: "Yasmim_omega.png" },
                 { id: 89, name: "Marlim felicio", photo: "marlim_omega.png" }, { id: 90, name: "Arthur Oliveira", photo: "arthuroliveira_omega.png" }, { id: 91, name: "Davi santana", photo: "Davisantana_omega.png" }
             ]
         };
@@ -771,7 +772,6 @@
                 }
             });
         }
-
         // ============================================
         // SINCRONIZANDO DADOS EXTRAS DO FIREBASE
         // ============================================
@@ -779,22 +779,29 @@
             const extras = snapshot.val();
             if(!extras) return;
 
-            // Atualiza ou Adiciona Alunos
+            // Atualiza, Adiciona ou Remove Alunos
             if(extras.alunos) {
                 Object.keys(extras.alunos).forEach(roomKey => {
-                    if(!kidsData[roomKey]) kidsData[roomKey] = []; // Garante que a sala existe
+                    if(!kidsData[roomKey]) kidsData[roomKey] = [];
                     
                     Object.keys(extras.alunos[roomKey]).forEach(safeName => {
                         const data = extras.alunos[roomKey][safeName];
-                        const kidToUpdate = kidsData[roomKey].find(k => k.name.replace(/[.#$[\]]/g, '') === safeName);
+                        const kidIndex = kidsData[roomKey].findIndex(k => k.name.replace(/[.#$[\]]/g, '') === safeName);
                         
-                        if(kidToUpdate) {
-                            // Se já existe, só atualiza
-                            if(data.dob !== undefined) kidToUpdate.dob = data.dob;
-                            if(data.phone !== undefined) kidToUpdate.phone = data.phone;
-                            if(data.guardian !== undefined) kidToUpdate.guardian = data.guardian;
-                        } else if (data.isNew) {
-                            // Se não existe, é um aluno novo! Injeta na lista.
+                        if(kidIndex !== -1) {
+                            if (data.deleted) {
+                                // Se foi apagado, remove a criança da lista visual
+                                kidsData[roomKey].splice(kidIndex, 1);
+                            } else {
+                                // Se existe e não foi apagado, atualiza os dados
+                                const kidToUpdate = kidsData[roomKey][kidIndex];
+                                if(data.name !== undefined) kidToUpdate.name = data.name;
+                                if(data.dob !== undefined) kidToUpdate.dob = data.dob;
+                                if(data.phone !== undefined) kidToUpdate.phone = data.phone;
+                                if(data.guardian !== undefined) kidToUpdate.guardian = data.guardian;
+                            }
+                        } else if (data.isNew && !data.deleted) {
+                            // Se não existe na lista, é um aluno novo! Injeta.
                             kidsData[roomKey].push({
                                 id: Date.now() + Math.random(),
                                 name: data.name || safeName,
@@ -808,19 +815,23 @@
                 });
             }
 
-            // Atualiza ou Adiciona Professores
+            // Atualiza, Adiciona ou Remove Professores
             if(extras.professores) {
                 Object.keys(extras.professores).forEach(safeName => {
                     const data = extras.professores[safeName];
-                    const teacherToUpdate = fixedTeachersData.find(t => t.name.replace(/[.#$[\]]/g, '') === safeName);
+                    const teacherIndex = fixedTeachersData.findIndex(t => t.name.replace(/[.#$[\]]/g, '') === safeName);
                     
-                    if(teacherToUpdate) {
-                        // Se já existe, só atualiza
-                        if(data.dob !== undefined) teacherToUpdate.dob = data.dob;
-                        if(data.phone !== undefined) teacherToUpdate.phone = data.phone;
-                        if(data.room !== undefined) teacherToUpdate.room = data.room;
-                    } else if (data.isNew) {
-                         // Se não existe, é um professor novo! Injeta na lista.
+                    if(teacherIndex !== -1) {
+                        if (data.deleted) {
+                            fixedTeachersData.splice(teacherIndex, 1);
+                        } else {
+                            const teacherToUpdate = fixedTeachersData[teacherIndex];
+                            if(data.name !== undefined) teacherToUpdate.name = data.name;
+                            if(data.dob !== undefined) teacherToUpdate.dob = data.dob;
+                            if(data.phone !== undefined) teacherToUpdate.phone = data.phone;
+                            if(data.room !== undefined) teacherToUpdate.room = data.room;
+                        }
+                    } else if (data.isNew && !data.deleted) {
                          fixedTeachersData.push({
                             name: data.name || safeName,
                             photo: data.photo || "",
@@ -832,9 +843,13 @@
                 });
             }
 
-            // Recarrega as telas para mostrar as pessoas novas
+            // Recarrega as telas para mostrar as mudanças
             if (typeof renderAdminPeople === "function") renderAdminPeople();
             if (typeof renderBirthdays === "function") renderBirthdays();
+            // Atualiza a tela de seleção de escala se o modal estiver aberto
+            if (document.getElementById('scheduleFormModal') && document.getElementById('scheduleFormModal').classList.contains('active')) {
+                updateTeacherListByRoomSelect();
+            }
         });
         
         // Organiza as datas cronologicamente
@@ -1648,36 +1663,59 @@
         }
 
         // Funções do Modal de Edição (Somente Admin)
+        // ==========================================
+        // FUNÇÕES DE EDIÇÃO E EXCLUSÃO (CORRIGIDAS)
+        // ==========================================
         function openEditPersonModal(type, room, name) {
-            if(!isAdminMode) { openPasswordModal(); return; }
-            
-            document.getElementById('editPersonType').value = type;
-            document.getElementById('editPersonRoom').value = room;
-            document.getElementById('editPersonOriginalName').value = name;
-            document.getElementById('editPersonName').innerText = name;
+            try {
+                if(!isAdminMode) { openPasswordModal(); return; }
+                
+                document.getElementById('editPersonType').value = type;
+                document.getElementById('editPersonRoom').value = room;
+                document.getElementById('editPersonOriginalName').value = name;
+                
+                // Preenche o nome no campo para edição
+                const nameInput = document.getElementById('editPersonNameInput');
+                if (nameInput) nameInput.value = name;
 
-            document.getElementById('editPersonStudentFields').style.display = (type === 'aluno') ? 'block' : 'none';
+                // Mostra/esconde os campos de aluno (responsável)
+                const studentFields = document.getElementById('editPersonStudentFields');
+                if (studentFields) studentFields.style.display = (type === 'aluno') ? 'block' : 'none';
 
-            let existingData = null;
-            if(type === 'aluno') {
-                existingData = kidsData[room].find(k => k.name === name);
-            } else {
-                existingData = fixedTeachersData.find(t => t.name === name);
+                // Busca os dados atuais da pessoa
+                let existingData = null;
+                if(type === 'aluno') {
+                    existingData = kidsData[room].find(k => k.name === name);
+                } else {
+                    existingData = fixedTeachersData.find(t => t.name === name);
+                }
+
+                // Proteção contra travamento se não achar os dados
+                if (!existingData) {
+                    alert("Erro interno: Não foi possível carregar os dados de " + name);
+                    return;
+                }
+
+                // Ajusta a data de nascimento
+                let dobValue = existingData.dob || '';
+                if(dobValue.includes('/')) {
+                    const p = dobValue.split('/');
+                    if(p.length===3) dobValue = `${p[2]}-${p[1]}-${p[0]}`;
+                }
+
+                document.getElementById('editPersonDob').value = dobValue;
+                document.getElementById('editPersonPhone').value = existingData.phone || '';
+                
+                if(type === 'aluno') {
+                    document.getElementById('editPersonGuardian').value = existingData.guardian || '';
+                }
+
+                // Abre a janela
+                document.getElementById('editPersonModal').classList.add('active');
+            } catch (erro) {
+                alert("Travou ao tentar abrir a edição! Erro: " + erro.message);
+                console.error(erro);
             }
-
-            let dobValue = existingData.dob || '';
-            if(dobValue.includes('/')) {
-                const p = dobValue.split('/');
-                if(p.length===3) dobValue = `${p[2]}-${p[1]}-${p[0]}`;
-            }
-
-            document.getElementById('editPersonDob').value = dobValue;
-            document.getElementById('editPersonPhone').value = existingData.phone || '';
-            if(type === 'aluno') {
-                document.getElementById('editPersonGuardian').value = existingData.guardian || '';
-            }
-
-            document.getElementById('editPersonModal').classList.add('active');
         }
 
         function closeEditPersonModal() {
@@ -1687,23 +1725,59 @@
         function savePersonEdit() {
             const type = document.getElementById('editPersonType').value;
             const room = document.getElementById('editPersonRoom').value;
-            const name = document.getElementById('editPersonOriginalName').value;
+            const originalName = document.getElementById('editPersonOriginalName').value;
+            const newName = document.getElementById('editPersonNameInput').value.trim();
             
             const dob = document.getElementById('editPersonDob').value;
             const phone = document.getElementById('editPersonPhone').value;
             const guardian = document.getElementById('editPersonGuardian').value;
 
-            // Retira caracteres proibidos pelo Firebase
+            if (!newName) return alert("O nome não pode ficar vazio!");
+
+            const safeOriginalName = originalName.replace(/[.#$[\]]/g, ''); 
+            const safeNewName = newName.replace(/[.#$[\]]/g, ''); 
+
+            const oldNodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeOriginalName}` : `dados_extras/professores/${safeOriginalName}`;
+            const newNodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeNewName}` : `dados_extras/professores/${safeNewName}`;
+
+            const payload = { name: newName, dob, phone };
+            if(type === 'aluno') payload.guardian = guardian;
+
+            const btn = document.querySelector('#editPersonModal .btn-success');
+            const btnOriginalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            btn.disabled = true;
+
+            if (safeNewName !== safeOriginalName) {
+                db.ref(newNodePath).update(payload).then(() => {
+                    db.ref(oldNodePath).update({ deleted: true }).then(() => {
+                        closeEditPersonModal();
+                        alert("✅ Dados e nome atualizados com sucesso!");
+                    });
+                }).finally(() => { btn.innerHTML = btnOriginalText; btn.disabled = false; });
+            } else {
+                db.ref(oldNodePath).update(payload).then(() => {
+                    closeEditPersonModal();
+                    alert("✅ Dados salvos com sucesso!");
+                }).catch(e => alert("Erro ao salvar: " + e.message))
+                .finally(() => { btn.innerHTML = btnOriginalText; btn.disabled = false; });
+            }
+        }
+
+        function deletePerson() {
+            const type = document.getElementById('editPersonType').value;
+            const room = document.getElementById('editPersonRoom').value;
+            const name = document.getElementById('editPersonOriginalName').value;
+            
+            if(!confirm(`⚠️ Tem certeza que deseja APAGAR ${name} do sistema?\nIsso não pode ser desfeito.`)) return;
+
             const safeName = name.replace(/[.#$[\]]/g, ''); 
             const nodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeName}` : `dados_extras/professores/${safeName}`;
 
-            const payload = { dob, phone };
-            if(type === 'aluno') payload.guardian = guardian;
-
-            db.ref(nodePath).update(payload).then(() => {
+            db.ref(nodePath).update({ deleted: true }).then(() => {
                 closeEditPersonModal();
-                alert("✅ Dados salvos com sucesso!");
-            }).catch(e => alert("Erro ao salvar: " + e.message));
+                alert("🗑️ Registro apagado com sucesso!");
+            }).catch(e => alert("Erro ao apagar: " + e.message));
         }
         async function submitRegistration() {
             const name = document.getElementById('regName').value.trim();
