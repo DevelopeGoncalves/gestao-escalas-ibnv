@@ -358,34 +358,43 @@
                 </div>
         </div>
 
-        <div id="editPersonModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="margin-top:0; color:var(--primary);"><i class="fas fa-user-edit"></i> Editar Dados</h3>
-            <input type="text" id="editPersonNameInput" style="font-weight:800; margin-bottom: 15px; font-size: 1.1rem; color: var(--text-main); width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 12px; font-family: inherit; background: #f9fafb;">
+        <div id="editPersonModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Editar Dados</h2>
+                <button class="close-btn" onclick="closeEditPersonModal()">&times;</button>
+            </div>
             
             <input type="hidden" id="editPersonType">
             <input type="hidden" id="editPersonRoom">
             <input type="hidden" id="editPersonOriginalName">
 
             <div class="form-group">
-                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Data de Nascimento</label>
-                <input type="date" id="editPersonDob">
+                <label>Nome Completo</label>
+                <input type="text" id="editPersonNameInput" class="form-input" style="background:#f9fafb;" placeholder="Digite o nome correto...">
             </div>
-            <div id="editPersonStudentFields">
-                <div class="form-group">
-                    <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Nome do Responsável</label>
-                    <input type="text" id="editPersonGuardian" placeholder="Ex: Maria (Mãe)">
-                </div>
-            </div>
+
             <div class="form-group">
-                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">WhatsApp (Apenas números)</label>
-                <input type="tel" id="editPersonPhone" placeholder="Ex: 27999999999">
+                <label>Data de Nascimento</label>
+                <input type="date" id="editPersonDob" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label>Telefone / WhatsApp</label>
+                <input type="tel" id="editPersonPhone" class="form-input" placeholder="(XX) XXXXX-XXXX">
+            </div>
+
+            <div id="editPersonStudentFields" style="display:none;">
+                <div class="form-group">
+                    <label>Nome do Responsável</label>
+                    <input type="text" id="editPersonGuardian" class="form-input" placeholder="Nome do pai/mãe...">
+                </div>
             </div>
 
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn btn-danger" style="flex: 0.3; background: #fee2e2; color: #ef4444;" onclick="deletePerson()"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-danger" style="flex: 0.3; background: #fee2e2; color: #ef4444;" onclick="deletePerson()" title="Apagar Registro"><i class="fas fa-trash"></i></button>
                 <button class="btn" style="background: #e5e7eb; color: #4b5563; flex: 1;" onclick="closeEditPersonModal()">Cancelar</button>
-                <button class="btn btn-success" style="flex: 1;" onclick="savePersonEdit()">Salvar</button>
+                <button class="btn btn-success" style="flex: 1;" onclick="savePersonEdit()"><i class="fas fa-save"></i> Salvar</button>
             </div>
         </div>
     </div>
