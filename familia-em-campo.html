@@ -163,7 +163,6 @@
                 <div class="info-list">
                     <div class="info-item"><span>📖</span> EBD (09h às 11h)</div>
                     <div class="info-item"><span>⛪</span> Culto (18h às 20h)</div>
-                    <div class="info-item"><span>🖍️</span> Atividade (18h às 20h)</div>
                 </div>
             </div>
             <div class="card" style="text-align: center; background: transparent; box-shadow: none; padding: 0;">
@@ -216,13 +215,6 @@
                             <span class="lock-msg" id="lock-msg-culto">Disponível de 18h às 20h</span>
                         </div>
                         <input type="checkbox" class="custom-checkbox" id="chk-culto">
-                    </label>
-                    <label class="task-item" id="item-atividade">
-                        <div>
-                            <div class="task-label">🖍️ Entregou Atividade? <span class="task-points">+1 pt</span></div>
-                            <span class="lock-msg" id="lock-msg-ativ">Disponível de 18h às 20h</span>
-                        </div>
-                        <input type="checkbox" class="custom-checkbox" id="chk-atividade">
                     </label>
                 </div>
                 <button class="btn-success" id="btn-salvar-domingo" onclick="salvarPontosSemanais()">Salvar Pontos</button>
@@ -373,73 +365,67 @@
     }
 
         function aplicarTravasDeHorario() {
-            const safeDateSelecionada = document.getElementById('sunday-date').value;
-            const hojeStr = dataOnlineAtual.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}).replace(/\//g, '-'); 
+        const safeDateSelecionada = document.getElementById('sunday-date').value;
+        const hojeStr = dataOnlineAtual.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}).replace(/\//g, '-'); 
+        
+        const diaSemana = dataOnlineAtual.getDay(); 
+        const hora = dataOnlineAtual.getHours();
+        
+        const isHoje = (safeDateSelecionada === hojeStr); 
+        const isDomingo = (diaSemana === 0);
+
+        const ebdLiberado = isHoje && isDomingo && (hora >= 9 && hora < 12);
+        const cultoAtivLiberado = isHoje && isDomingo && (hora >= 17 && hora < 22);
+
+        document.getElementById('chk-ebd').disabled = !ebdLiberado;
+        document.getElementById('item-ebd').classList.toggle('locked', !ebdLiberado);
+        document.getElementById('lock-msg-ebd').innerHTML = ebdLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 09h às 12h)';
+
+        document.getElementById('chk-culto').disabled = !cultoAtivLiberado;
+        document.getElementById('item-culto').classList.toggle('locked', !cultoAtivLiberado);
+        document.getElementById('lock-msg-culto').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 17h às 22h)';
+
+        document.getElementById('btn-salvar-domingo').disabled = !isHoje;
+    }
+
+    function carregarFormularioSemana() {
+        const dateStr = document.getElementById('sunday-date').value;
+        let historyObj = null;
+        if(dbScores[currentKidId] && dbScores[currentKidId].history) historyObj = dbScores[currentKidId].history[dateStr];
+        
+        document.getElementById('chk-ebd').checked = historyObj ? historyObj.ebd : false;
+        document.getElementById('chk-culto').checked = historyObj ? historyObj.culto : false;
+        
+        aplicarTravasDeHorario();
+    }
+
+    function salvarPontosSemanais() {
+        const dateStr = document.getElementById('sunday-date').value;
+        const ebd = document.getElementById('chk-ebd').checked;
+        const culto = document.getElementById('chk-culto').checked;
+
+        const historyRef = db.ref(`imersao_biblica_scores/${currentKidId}/history/${dateStr}`);
+        
+        historyRef.once('value', snapshot => {
+            let diaData = snapshot.val() || {};
             
-            const diaSemana = dataOnlineAtual.getDay(); 
-            const hora = dataOnlineAtual.getHours();
+            // Resgata os pontos que o professor já deu neste dia (presença + atividade)
+            let profPts = diaData.presenca_prof || 0;
+            let ativPts = diaData.atividade_prof || 0;
             
-            const isHoje = (safeDateSelecionada === hojeStr); 
-            const isDomingo = (diaSemana === 0);
+            // Soma os pontos marcados pelos pais com os do professor
+            let ptsDia = (ebd ? 1 : 0) + (culto ? 1 : 0) + profPts + ativPts;
 
-            // Pequena margem extra de tolerância (09h às 12h) e (17h às 22h)
-            const ebdLiberado = isHoje && isDomingo && (hora >= 9 && hora < 12);
-            const cultoAtivLiberado = isHoje && isDomingo && (hora >= 17 && hora < 22);
-
-            document.getElementById('chk-ebd').disabled = !ebdLiberado;
-            document.getElementById('item-ebd').classList.toggle('locked', !ebdLiberado);
-            document.getElementById('lock-msg-ebd').innerHTML = ebdLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 09h às 12h)';
-
-            document.getElementById('chk-culto').disabled = !cultoAtivLiberado;
-            document.getElementById('item-culto').classList.toggle('locked', !cultoAtivLiberado);
-            document.getElementById('lock-msg-culto').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 17h às 22h)';
-
-            document.getElementById('chk-atividade').disabled = !cultoAtivLiberado;
-            document.getElementById('item-atividade').classList.toggle('locked', !cultoAtivLiberado);
-            document.getElementById('lock-msg-ativ').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 17h às 22h)';
-
-            document.getElementById('btn-salvar-domingo').disabled = !isHoje;
-        }
-
-        function carregarFormularioSemana() {
-            const dateStr = document.getElementById('sunday-date').value;
-            let historyObj = null;
-            if(dbScores[currentKidId] && dbScores[currentKidId].history) historyObj = dbScores[currentKidId].history[dateStr];
-            document.getElementById('chk-ebd').checked = historyObj ? historyObj.ebd : false;
-            document.getElementById('chk-culto').checked = historyObj ? historyObj.culto : false;
-            document.getElementById('chk-atividade').checked = historyObj ? historyObj.atividade : false;
-            aplicarTravasDeHorario();
-        }
-
-        function salvarPontosSemanais() {
-            const dateStr = document.getElementById('sunday-date').value;
-            const ebd = document.getElementById('chk-ebd').checked;
-            const culto = document.getElementById('chk-culto').checked;
-            const atividade = document.getElementById('chk-atividade').checked;
-
-            const historyRef = db.ref(`imersao_biblica_scores/${currentKidId}/history/${dateStr}`);
-            
-            historyRef.once('value', snapshot => {
-                let diaData = snapshot.val() || {};
-                
-                // Resgata os pontos que o professor já deu neste dia (se houver)
-                let profPts = diaData.presenca_prof || 0;
-                
-                // Soma os pontos marcados pelos pais com os do professor
-                let ptsDia = (ebd ? 1 : 0) + (culto ? 1 : 0) + (atividade ? 1 : 0) + profPts;
-
-                // Usa .update() para atualizar apenas a parte dos pais, preservando o professor
-                historyRef.update({ 
-                    ebd: ebd, 
-                    culto: culto, 
-                    atividade: atividade, 
-                    pts: ptsDia,
-                    presenca_prof: profPts 
-                }).then(() => { 
-                    alert(`✅ Salvo com sucesso!`); 
-                });
+            // Atualiza preservando os dados do professor
+            historyRef.update({ 
+                ebd: ebd, 
+                culto: culto, 
+                pts: ptsDia
+            }).then(() => { 
+                alert(`✅ Salvo com sucesso!`); 
             });
-        }
+        });
+    }
 
         function salvarGincanas() {
             db.ref(`imersao_biblica_scores/${currentKidId}/gincanas`).set({

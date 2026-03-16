@@ -121,6 +121,14 @@
         .kid-card.present .kid-img { border-color: var(--success); transform: scale(1.05); }
         .kid-name { font-size: 0.8rem; font-weight: 700; line-height: 1.2; color: var(--text-main); }
 
+        .ativ-badge {
+            display: block; margin: 8px auto 0; padding: 4px 8px; background: #f3f4f6; color: #9ca3af;
+            border-radius: 12px; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.2s; border: 1px solid #e5e7eb;
+        }
+        .kid-card.atividade .ativ-badge {
+            background: var(--secondary); color: white; border-color: var(--secondary);
+        }
+
         .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
         
         .person-card {
@@ -1150,20 +1158,44 @@
         // CHAMADA VISUAL (FIREBASE)
         // ============================================
         function selectRoomChamada(key) {
-             selectedRoomKeyChamada = key;
-            const grid = document.getElementById('kidsList'); grid.innerHTML = '';
-            const kids = kidsData[key] || [];
-            if(kids.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center">Sem alunos cadastrados</div>'; return; }
+        selectedRoomKeyChamada = key;
+        const grid = document.getElementById('kidsList'); grid.innerHTML = '';
+        const kids = kidsData[key] || [];
+        if(kids.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center">Sem alunos cadastrados</div>'; return; }
 
-            kids.forEach(kid => {
-                const div = document.createElement('div'); div.className = 'kid-card'; div.dataset.name = kid.name;
-                div.onclick = function() { this.classList.toggle('present'); checkCallFormValidity(); };
-                const imgSrc = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
-                div.innerHTML = `<img src="${imgSrc}" class="kid-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'"><div class="kid-name">${kid.name}</div>`;
-                grid.appendChild(div);
-            });
-            checkCallFormValidity();
+        kids.forEach(kid => {
+            const div = document.createElement('div'); div.className = 'kid-card'; div.dataset.name = kid.name;
+            
+            div.onclick = function() { 
+                this.classList.toggle('present'); 
+                // Se tirar a presença, tira a atividade também
+                if (!this.classList.contains('present')) this.classList.remove('atividade');
+                checkCallFormValidity(); 
+            };
+            
+            const imgSrc = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+            div.innerHTML = `
+                <img src="${imgSrc}" class="kid-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'">
+                <div class="kid-name">${kid.name}</div>
+                <div class="ativ-badge" onclick="toggleAtividade(event, this)">🖍️ Atividade</div>
+            `;
+            grid.appendChild(div);
+        });
+        checkCallFormValidity();
+    }
+
+    // Nova função para gerenciar o clique no botão de atividade
+    window.toggleAtividade = function(e, badge) {
+        e.stopPropagation(); // Evita que o clique vaze para a div da criança
+        const card = badge.closest('.kid-card');
+        card.classList.toggle('atividade');
+        
+        // Se marcou atividade, automaticamente marca a presença
+        if(card.classList.contains('atividade')) {
+            card.classList.add('present');
         }
+        checkCallFormValidity();
+    };
 
         function addExtraKid() {
             const name = document.getElementById('extraKidName').value;
@@ -1212,33 +1244,37 @@
             
             presentNodes.forEach(node => {
                 const kidNameRaw = node.dataset.name;
+                const isAtividade = node.classList.contains('atividade'); // Checa se entregou atividade
                 const kidIndex = roomKids.findIndex(k => k.name === kidNameRaw);
                 
                 if (kidIndex !== -1) {
-                    // CORREÇÃO: Usa o nome seguro da criança como ID, não mais a posição
                     const safeName = kidNameRaw.replace(/[.#$[\]]/g, '');
                     const kidId = `${selectedRoomKeyChamada}_${safeName}`;
                     
                     const historyRef = db.ref(`imersao_biblica_scores/${kidId}/history/${safeDate}`);
 
                     historyRef.once('value', snapshot => {
-                        let diaData = snapshot.val() || { ebd: false, culto: false, atividade: false, presenca_prof: 0, pts: 0 };
+                        let diaData = snapshot.val() || { ebd: false, culto: false, presenca_prof: 0, atividade_prof: 0, pts: 0 };
                         
-                        // Adiciona +1 ponto de presença (se houver chamada de manhã e de noite, soma 2)
+                        let pontosGanhosAgora = 1; // +1 Ponto de Presença
                         diaData.presenca_prof = (diaData.presenca_prof || 0) + 1;
                         
+                        if (isAtividade) {
+                            diaData.atividade_prof = (diaData.atividade_prof || 0) + 1;
+                            pontosGanhosAgora += 1; // +1 Ponto de Atividade
+                        }
+                        
                         // Recalcula o total do dia somando Pais + Professor
-                        let ptsPais = (diaData.ebd ? 1 : 0) + (diaData.culto ? 1 : 0) + (diaData.atividade ? 1 : 0);
-                        diaData.pts = ptsPais + diaData.presenca_prof;
+                        let ptsPais = (diaData.ebd ? 1 : 0) + (diaData.culto ? 1 : 0);
+                        diaData.pts = ptsPais + diaData.presenca_prof + (diaData.atividade_prof || 0);
 
-                        // Atualiza os dados sem apagar o que os pais marcaram
                         historyRef.update(diaData);
 
-                        // Atualiza a barra de progresso (Total)
+                        // Atualiza a barra de progresso (Total) corretamente
                         const totalRef = db.ref(`imersao_biblica_scores/${kidId}/total`);
                         totalRef.once('value', totSnap => {
                             let total = totSnap.val() || 0;
-                            totalRef.set(total + 1);
+                            totalRef.set(total + pontosGanhosAgora);
                         });
                     });
                 }
@@ -1299,13 +1335,67 @@
             });
         }
 
-        function deleteChamada(id) {
-            if(confirm("Deseja realmente apagar este registro de chamada do banco de dados?")) {
-                db.ref('chamadas/' + id).remove().then(() => {
-                    allChamadasData = allChamadasData.filter(c => c.id !== id); renderChamadaHistory();
-                });
+        async function deleteChamada(id) {
+        if(!confirm("Deseja realmente apagar este registro de chamada e REMOVER os pontos dessas crianças?")) return;
+
+        // Encontra a chamada que estamos apagando
+        const chamada = allChamadasData.find(c => c.id === id);
+        if (!chamada) return;
+
+        // Converte a data (DD/MM/YYYY) para o formato salvo nos pontos (DD-MM-YYYY)
+        const safeDate = chamada.lesson_date.replace(/\//g, '-');
+        const roomKey = chamada.room_key;
+        
+        // Se houver crianças na lista, vamos retirar os pontos delas
+        if (chamada.kids_list && chamada.kids_list.trim() !== "") {
+            const names = chamada.kids_list.split('; ');
+            
+            for (let name of names) {
+                // Remove a tag "(Visitante)" se existir, para não dar erro no nome
+                let cleanName = name.replace(' (Visitante)', '');
+                const safeName = cleanName.replace(/[.#$[\]]/g, '');
+                const kidId = `${roomKey}_${safeName}`;
+
+                const historyRef = db.ref(`imersao_biblica_scores/${kidId}/history/${safeDate}`);
+                const snapshot = await historyRef.once('value');
+                let diaData = snapshot.val();
+
+                if (diaData) {
+                    // Verifica quantos pontos o professor deu neste dia (presença + atividade)
+                    let profPts = diaData.presenca_prof || 0;
+                    let ativPts = diaData.atividade_prof || 0;
+                    let pontosARemover = profPts + ativPts;
+
+                    if (pontosARemover > 0) {
+                        // Zera os pontos dados pelo professor neste dia específico
+                        diaData.presenca_prof = 0;
+                        diaData.atividade_prof = 0;
+                        
+                        // Recalcula o total do dia mantendo APENAS o que os pais marcaram (ebd e culto)
+                        let ptsPais = (diaData.ebd ? 1 : 0) + (diaData.culto ? 1 : 0);
+                        diaData.pts = ptsPais;
+
+                        await historyRef.update(diaData);
+
+                        // Subtrai os pontos da barra de progresso total da criança
+                        const totalRef = db.ref(`imersao_biblica_scores/${kidId}/total`);
+                        const totSnap = await totalRef.once('value');
+                        let totalAtual = totSnap.val() || 0;
+                        
+                        // Garante que o total não fique negativo
+                        await totalRef.set(Math.max(0, totalAtual - pontosARemover));
+                    }
+                }
             }
         }
+
+        // Por fim, remove o registro da chamada do banco de dados
+        await db.ref('chamadas/' + id).remove();
+        
+        allChamadasData = allChamadasData.filter(c => c.id !== id); 
+        renderChamadaHistory();
+        alert("✅ Registro apagado e pontos revertidos com sucesso!");
+    }
 
         function exportChamadaCSV() {
             if (allChamadasData.length === 0) { alert("Nenhum dado para exportar."); return; }
