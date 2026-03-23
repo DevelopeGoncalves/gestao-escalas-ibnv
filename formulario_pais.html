@@ -295,6 +295,35 @@
                     });
                 }
                 applyFilters(); 
+                // Puxa as crianças adicionadas pelo painel da Liderança
+            db.ref('dados_extras/alunos').on('value', snapshot => {
+                const extras = snapshot.val();
+                if(!extras) return;
+                
+                Object.keys(extras).forEach(roomKey => {
+                    Object.keys(extras[roomKey]).forEach(safeName => {
+                        const data = extras[roomKey][safeName];
+                        const kidIndex = allKidsFlat.findIndex(k => k.name.replace(/[.#$[\]]/g, '') === safeName && k.roomKey === roomKey);
+                        
+                        if(kidIndex !== -1) {
+                            if (data.deleted) {
+                                allKidsFlat.splice(kidIndex, 1);
+                            } else {
+                                allKidsFlat[kidIndex].name = data.name || allKidsFlat[kidIndex].name;
+                                allKidsFlat[kidIndex].photo = data.photo || allKidsFlat[kidIndex].photo;
+                            }
+                        } else if (data.isNew && !data.deleted) {
+                            allKidsFlat.push({
+                                name: data.name || safeName,
+                                photo: data.photo || "",
+                                roomKey: roomKey,
+                                roomName: roomsData[roomKey] ? roomsData[roomKey].name : ""
+                            });
+                        }
+                    });
+                });
+                applyFilters(); // Atualiza a tela de busca instantaneamente
+            });
             });
         };
 

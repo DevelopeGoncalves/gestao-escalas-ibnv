@@ -292,6 +292,45 @@
                 renderizarRanking();
             });
             checkAutoLogin();
+            // Sincroniza crianças novas do Firebase na hora!
+            db.ref('dados_extras/alunos').on('value', snapshot => {
+                const extras = snapshot.val();
+                if(!extras) return;
+                
+                Object.keys(extras).forEach(roomKey => {
+                    if(!kidsData[roomKey]) kidsData[roomKey] = [];
+                    Object.keys(extras[roomKey]).forEach(safeName => {
+                        const data = extras[roomKey][safeName];
+                        const kidIndex = kidsData[roomKey].findIndex(k => k.id === `${roomKey}_${safeName}`);
+                        
+                        if(kidIndex !== -1) {
+                            if (data.deleted) {
+                                kidsData[roomKey].splice(kidIndex, 1);
+                            } else {
+                                kidsData[roomKey][kidIndex].name = data.name || kidsData[roomKey][kidIndex].name;
+                                kidsData[roomKey][kidIndex].photo = data.photo || kidsData[roomKey][kidIndex].photo;
+                            }
+                        } else if (data.isNew && !data.deleted) {
+                            kidsData[roomKey].push({
+                                id: `${roomKey}_${safeName}`,
+                                name: data.name || safeName,
+                                photo: data.photo || "",
+                                roomKey: roomKey,
+                                room: roomsData[roomKey] ? roomsData[roomKey].name : "",
+                                icon: roomsData[roomKey] ? roomsData[roomKey].icon : ""
+                            });
+                        }
+                    });
+                });
+                
+                // Reconstrói a lista geral e atualiza as telas
+                allKidsFlat.length = 0;
+                Object.keys(kidsData).forEach(rk => kidsData[rk].forEach(k => allKidsFlat.push(k)));
+                
+                const activeTab = document.querySelector('#login-room-filters .pill-tab.active');
+                if(activeTab && document.getElementById('login-view').classList.contains('active')) activeTab.click(); 
+                renderizarRanking();
+            });
         };
 
         function switchTab(tabName) {

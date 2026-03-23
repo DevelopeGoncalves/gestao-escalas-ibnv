@@ -472,8 +472,21 @@
                 <h4 style="margin: 0; color: var(--text-muted);">Toque na foto para marcar:</h4>
                 <div id="kidsList" class="kids-grid"><div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #9ca3af;">Selecione uma sala acima 👆</div></div>
                 <div style="margin-top: 30px; border-top: 1px solid #f3f4f6; padding-top: 20px;">
-                    <div style="background: #fff7ed; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #ffedd5;">
-                        <div style="display: flex; gap: 10px;"><input type="text" id="extraKidName" placeholder="Nome do Visitante" style="background:white;"><button class="btn btn-primary" style="width: auto; background: var(--secondary);" onclick="addExtraKid()">Add</button></div>
+                    <div style="background: #f5f3ff; border: 2px solid var(--primary); padding: 15px; border-radius: 15px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 10px 0; color: var(--primary-dark);"><i class="fas fa-clipboard-list"></i> 1. Dados da Aula</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                            <div>
+                                <label style="font-size: 0.85rem; font-weight: 800; color: var(--primary-dark);">📅 Data</label>
+                                <input type="date" id="dateInput" style="border: 2px solid var(--primary);">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.85rem; font-weight: 800; color: var(--primary-dark);">👩‍🏫 Quem está dando aula? <span style="color:var(--danger)">*</span></label>
+                                <input type="text" id="teacherName" placeholder="👉 Digite seu nome aqui..." oninput="checkCallFormValidity()" style="border: 2px solid var(--primary); box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);">
+                            </div>
+                        </div>
+                        <div id="teacherWarning" style="color: var(--danger); font-size: 0.8rem; font-weight: 800; margin-top: 10px; display: none;">
+                            <i class="fas fa-exclamation-triangle"></i> Digite o nome do professor para liberar o botão de enviar!
+                        </div>
                     </div>
                     <button class="btn btn-success" id="btn-submit-chamada" onclick="submitCall()" disabled><i class="fas fa-paper-plane"></i> Enviar Chamada</button>
                 </div>
@@ -562,7 +575,25 @@
                 <h3 style="margin-top:0;">Novo Cadastro</h3>
                 <div class="form-group"><label>Nome Completo</label><input type="text" id="regName"></div>
                 <div class="form-group"><label>Data Nascimento</label><input type="date" id="regDob"></div>
-                <div id="studentFields"><div class="form-group"><label>Responsável</label><input type="text" id="regGuardian"></div><div class="form-group"><label>WhatsApp Resp.</label><input type="tel" id="regPhone" placeholder="DDD+Número"></div><div class="form-group"><label>Sala</label><select id="regRoom"><option value="Berçário">Berçário</option><option value="Alfa">Alfa</option><option value="Beta">Beta</option><option value="Gama">Gama</option><option value="Ômega">Ômega</option></select></div></div>
+                <div id="studentFields">
+                <div class="form-group"><label>Responsável</label><input type="text" id="regGuardian"></div>
+                <div class="form-group"><label>WhatsApp Resp.</label><input type="tel" id="regPhone" placeholder="DDD+Número"></div>
+                <div class="form-group">
+                    <label>Nome da Foto (opcional)</label>
+                    <input type="text" id="regPhoto" placeholder="Ex: joaozinho (sem o .png)">
+                    <small style="color:var(--text-muted); font-size:0.75rem;">O sistema coloca "img/" e ".png" sozinho.</small>
+                </div>
+                <div class="form-group">
+                    <label>Sala</label>
+                    <select id="regRoom">
+                        <option value="Berçário">Berçário</option>
+                        <option value="Alfa">Alfa</option>
+                        <option value="Beta">Beta</option>
+                        <option value="Gama">Gama</option>
+                        <option value="Ômega">Ômega</option>
+                    </select>
+                </div>
+            </div>
                 <div id="teacherFields" class="hidden"><div class="form-group"><label>WhatsApp Professor</label><input type="tel" id="regTeacherPhone" placeholder="DDD+Número"></div><div class="form-group"><label>Sala Preferencial</label><select id="regTeacherRoom"><option value="">(Opcional) Selecione a Turma</option><option value="Berçário">Berçário</option><option value="Alfa">Alfa</option><option value="Beta">Beta</option><option value="Gama">Gama</option><option value="Ômega">Ômega</option></select></div></div>
                 <div style="display:flex; gap:10px;"><button class="btn btn-danger" onclick="toggleNewForm()">Cancelar</button><button class="btn btn-success" onclick="submitRegistration()">Salvar</button></div>
             </div>
@@ -1208,9 +1239,25 @@
         }
 
         function checkCallFormValidity() {
-            const tName = document.getElementById('teacherName').value; const dt = document.getElementById('dateInput').value; const hasRoom = selectedRoomKeyChamada !== null;
-            document.getElementById('btn-submit-chamada').disabled = !(tName && dt && hasRoom);
+        const tName = document.getElementById('teacherName').value.trim(); 
+        const dt = document.getElementById('dateInput').value; 
+        const hasRoom = selectedRoomKeyChamada !== null;
+        
+        // Libera ou bloqueia o botão
+        document.getElementById('btn-submit-chamada').disabled = !(tName && dt && hasRoom);
+        
+        // Mostra o aviso em vermelho se a pessoa já escolheu a sala mas esqueceu do nome
+        const warning = document.getElementById('teacherWarning');
+        if (warning) {
+            if (hasRoom && !tName) {
+                warning.style.display = 'block';
+                document.getElementById('teacherName').style.backgroundColor = '#fee2e2'; // Fundo avermelhado
+            } else {
+                warning.style.display = 'none';
+                document.getElementById('teacherName').style.backgroundColor = '#ffffff'; // Fundo branco normal
+            }
         }
+    }
         
         async function submitCall() {
         const btn = document.getElementById('btn-submit-chamada');
@@ -1903,9 +1950,11 @@
                 let roomKey = roomVal.toLowerCase();
                 if(roomKey === 'berçário') roomKey = 'berçario';
 
+                const photoInput = document.getElementById('regPhoto').value.trim();
+
                 payload.guardian = guardian;
                 payload.phone = phone;
-                payload.photo = ""; // Usa avatar automático
+                payload.photo = photoInput ? photoInput + ".png" : ""; // Coloca o .png sozinho!
                 
                 nodePath = `dados_extras/alunos/${roomKey}/${safeName}`;
             } else {
