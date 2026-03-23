@@ -458,12 +458,32 @@
         }
 
         function login(id, name, room, photo) {
-            currentKidId = id; currentKidName = name; currentKidRoom = room; currentKidPhoto = photo;
-            localStorage.setItem('familia_campo_session', JSON.stringify({id, name, room, photo}));
-            if (!dbScores[id]) { db.ref(`imersao_biblica_scores/${id}`).set({ total: 0, gincanas: { g1: false, g2: false, g3: false, g4: false }, history: {} }); }
-            document.getElementById('login-view').classList.remove('active'); document.getElementById('btn-voltar').style.display = 'block'; document.getElementById('bottom-nav').style.display = 'flex';
-            switchTab('dashboard'); 
-        }
+        currentKidId = id; 
+        currentKidName = name; 
+        currentKidRoom = room; 
+        currentKidPhoto = photo;
+        
+        // Salva a sessão no celular
+        localStorage.setItem('familia_campo_session', JSON.stringify({id, name, room, photo}));
+        
+        // CORREÇÃO: Pede para o Firebase checar de verdade se a criança existe antes de zerar tudo
+        db.ref(`imersao_biblica_scores/${id}`).once('value', snapshot => {
+            if (!snapshot.exists()) { 
+                // Só cria do zero se o Firebase confirmar que realmente não existe nada lá
+                db.ref(`imersao_biblica_scores/${id}`).set({ 
+                    total: 0, 
+                    gincanas: { g1: false, g2: false, g3: false, g4: false }, 
+                    history: {} 
+                }); 
+            }
+        });
+
+        // Atualiza a tela
+        document.getElementById('login-view').classList.remove('active'); 
+        document.getElementById('btn-voltar').style.display = 'block'; 
+        document.getElementById('bottom-nav').style.display = 'flex';
+        switchTab('dashboard'); 
+    }
 
         function logout() {
             localStorage.removeItem('familia_campo_session'); currentKidId = null;
