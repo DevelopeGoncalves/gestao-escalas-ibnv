@@ -296,6 +296,7 @@
                 }
                 applyFilters(); 
                 // Puxa as crianças adicionadas pelo painel da Liderança
+            // Puxa as crianças adicionadas pelo painel da Liderança
             db.ref('dados_extras/alunos').on('value', snapshot => {
                 const extras = snapshot.val();
                 if(!extras) return;
@@ -311,13 +312,21 @@
                             } else {
                                 allKidsFlat[kidIndex].name = data.name || allKidsFlat[kidIndex].name;
                                 allKidsFlat[kidIndex].photo = data.photo || allKidsFlat[kidIndex].photo;
+                                // Agora ele puxa e atualiza os dados extras também:
+                                allKidsFlat[kidIndex].guardian = data.guardian || allKidsFlat[kidIndex].guardian || "";
+                                allKidsFlat[kidIndex].phone = data.phone || allKidsFlat[kidIndex].phone || "";
+                                allKidsFlat[kidIndex].dob = data.dob || allKidsFlat[kidIndex].dob || "";
                             }
                         } else if (data.isNew && !data.deleted) {
                             allKidsFlat.push({
                                 name: data.name || safeName,
                                 photo: data.photo || "",
                                 roomKey: roomKey,
-                                roomName: roomsData[roomKey] ? roomsData[roomKey].name : ""
+                                roomName: roomsData[roomKey] ? roomsData[roomKey].name : "",
+                                // Agora ele cadastra a criança nova já com os dados extras:
+                                guardian: data.guardian || "",
+                                phone: data.phone || "",
+                                dob: data.dob || ""
                             });
                         }
                     });
@@ -398,6 +407,15 @@
             document.getElementById('form-kid-img').src = photo;
             document.getElementById('form-kid-name').innerText = name;
             document.getElementById('form-kid-room').innerText = roomName;
+
+            // Busca a criança na nossa lista para ver se a liderança já preencheu os dados
+            const kidData = allKidsFlat.find(k => k.name === name && k.roomKey === roomKey) || {};
+
+            // Preenche os campos do formulário automaticamente se a liderança já tiver cadastrado
+            document.getElementById('inp-responsavel').value = kidData.guardian || '';
+            document.getElementById('inp-telefone').value = kidData.phone || '';
+            document.getElementById('inp-nascimento').value = kidData.dob || '';
+            document.getElementById('inp-gincana').value = '';
 
             document.getElementById('step-1').classList.remove('active');
             document.getElementById('step-2').classList.add('active');

@@ -45,6 +45,26 @@
         .info-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .info-item { background: #f8fafc; padding: 12px; border-radius: 15px; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; }
         .info-item span { font-size: 1.2rem; background: white; width: 35px; height: 35px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: var(--shadow-sm); }
+        /* CAIXA DE AVISO DE HORÁRIO */
+        .alert-horario {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #92400e;
+            font-weight: 800;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+        .alert-horario i {
+            font-size: 1.5rem;
+            color: #f59e0b;
+        }
 
         .filter-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; justify-content: flex-start; scroll-snap-type: x mandatory;}
         .filter-row::-webkit-scrollbar { display: none; }
@@ -79,7 +99,16 @@
         .task-list { display: flex; flex-direction: column; gap: 10px; }
         .task-item { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 12px 15px; border-radius: 12px; border: 1px solid #e2e8f0; transition: 0.3s; gap: 10px;}
         .task-item > div { flex: 1; min-width: 0; }
-        .task-item.locked { opacity: 0.6; background: #edf2f7; }
+        .task-item.locked { opacity: 0.6; background: #edf2f7; }    
+        /* ADICIONE ESTE BLOCO AQUI: */
+        .task-item.scored-green {
+            background: #e6fffa !important;
+            border-color: #38b2ac !important;
+            opacity: 1 !important;
+        }
+        .task-item.scored-green .custom-checkbox {
+            pointer-events: none; /* Impede qualquer clique */
+        }
         .task-label { font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;}
         .task-points { font-size: 0.7rem; background: #e2e8f0; color: var(--text-dark); padding: 2px 8px; border-radius: 10px; font-weight: 800; white-space: nowrap;}
         .custom-checkbox { width: 24px; height: 24px; accent-color: #38b2ac; flex-shrink: 0; }
@@ -161,8 +190,15 @@
             <div class="card" style="padding-top: 20px; margin-bottom: 20px;">
                 <h3 style="color: var(--primary-green); font-weight: 900; margin-top: 0; text-align: center; font-size: 1.1rem;">🎒 Como ganhar pontos?</h3>
                 <div class="info-list">
-                    <div class="info-item"><span>📖</span> EBD (09h às 11h)</div>
-                    <div class="info-item"><span>⛪</span> Culto (18h às 20h)</div>
+                    <div class="info-item"><span>📖</span> Participar da EBD ou Curso</div>
+                    <div class="info-item"><span>⛪</span> Participar do Culto à Noite</div>
+                </div>
+                <div class="alert-horario">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>Fique de olho no relógio!</strong><br>
+                        A marcação de pontos abre todo <strong>Domingo às 08:00</strong> e fecha automaticamente às <strong>22:00</strong>.
+                    </div>
                 </div>
             </div>
             <div class="card" style="text-align: center; background: transparent; box-shadow: none; padding: 0;">
@@ -204,15 +240,15 @@
                 <div class="task-list">
                     <label class="task-item" id="item-ebd">
                         <div>
-                            <div class="task-label">📖 Participou da EBD? <span class="task-points">+1 pt</span></div>
-                            <span class="lock-msg" id="lock-msg-ebd">Disponível de 09h às 11h</span>
+                            <div class="task-label">📖 EBD ou Curso <span class="task-points">+1 pt</span></div>
+                            <span class="lock-msg" id="lock-msg-ebd">Disponível Dom das 08h às 22h</span>
                         </div>
                         <input type="checkbox" class="custom-checkbox" id="chk-ebd">
                     </label>
                     <label class="task-item" id="item-culto">
                         <div>
-                            <div class="task-label">⛪ Culto à Noite? <span class="task-points">+1 pt</span></div>
-                            <span class="lock-msg" id="lock-msg-culto">Disponível de 18h às 20h</span>
+                            <div class="task-label">⛪ Culto à Noite <span class="task-points">+1 pt</span></div>
+                            <span class="lock-msg" id="lock-msg-culto">Disponível Dom das 08h às 22h</span>
                         </div>
                         <input type="checkbox" class="custom-checkbox" id="chk-culto">
                     </label>
@@ -404,39 +440,76 @@
     }
 
         function aplicarTravasDeHorario() {
-        const safeDateSelecionada = document.getElementById('sunday-date').value;
-        const hojeStr = dataOnlineAtual.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}).replace(/\//g, '-'); 
-        
-        const diaSemana = dataOnlineAtual.getDay(); 
-        const hora = dataOnlineAtual.getHours();
-        
-        const isHoje = (safeDateSelecionada === hojeStr); 
-        const isDomingo = (diaSemana === 0);
+            const safeDateSelecionada = document.getElementById('sunday-date').value;
+            const hojeStr = dataOnlineAtual.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}).replace(/\//g, '-'); 
+            
+            const diaSemana = dataOnlineAtual.getDay(); 
+            const hora = dataOnlineAtual.getHours();
+            
+            const isHoje = (safeDateSelecionada === hojeStr); 
+            const isDomingo = (diaSemana === 0);
 
-        const ebdLiberado = isHoje && isDomingo && (hora >= 9 && hora < 12);
-        const cultoAtivLiberado = isHoje && isDomingo && (hora >= 17 && hora < 22);
+            // Nova regra: Liberado se for hoje, domingo, entre 08:00 (hora >= 8) e 21:59 (hora < 22)
+            const periodoLiberado = isHoje && isDomingo && (hora >= 8 && hora < 22);
 
-        document.getElementById('chk-ebd').disabled = !ebdLiberado;
-        document.getElementById('item-ebd').classList.toggle('locked', !ebdLiberado);
-        document.getElementById('lock-msg-ebd').innerHTML = ebdLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 09h às 12h)';
+            // Aplica a mesma regra para os dois botões
+            document.getElementById('chk-ebd').disabled = !periodoLiberado;
+            document.getElementById('item-ebd').classList.toggle('locked', !periodoLiberado);
+            document.getElementById('lock-msg-ebd').innerHTML = periodoLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 08h às 22h)';
 
-        document.getElementById('chk-culto').disabled = !cultoAtivLiberado;
-        document.getElementById('item-culto').classList.toggle('locked', !cultoAtivLiberado);
-        document.getElementById('lock-msg-culto').innerHTML = cultoAtivLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 17h às 22h)';
+            document.getElementById('chk-culto').disabled = !periodoLiberado;
+            document.getElementById('item-culto').classList.toggle('locked', !periodoLiberado);
+            document.getElementById('lock-msg-culto').innerHTML = periodoLiberado ? '<span style="color:var(--primary-green)">✅ Liberado</span>' : '🔒 Fechado (Dom 08h às 22h)';
 
-        document.getElementById('btn-salvar-domingo').disabled = !isHoje;
-    }
+            document.getElementById('btn-salvar-domingo').disabled = !isHoje;
+        }
 
     function carregarFormularioSemana() {
-        const dateStr = document.getElementById('sunday-date').value;
-        let historyObj = null;
-        if(dbScores[currentKidId] && dbScores[currentKidId].history) historyObj = dbScores[currentKidId].history[dateStr];
-        
-        document.getElementById('chk-ebd').checked = historyObj ? historyObj.ebd : false;
-        document.getElementById('chk-culto').checked = historyObj ? historyObj.culto : false;
-        
-        aplicarTravasDeHorario();
-    }
+            const dateStr = document.getElementById('sunday-date').value;
+            let historyObj = null;
+            if(dbScores[currentKidId] && dbScores[currentKidId].history) historyObj = dbScores[currentKidId].history[dateStr];
+            
+            const ebdSalvo = historyObj ? historyObj.ebd : false;
+            const cultoSalvo = historyObj ? historyObj.culto : false;
+
+            document.getElementById('chk-ebd').checked = ebdSalvo;
+            document.getElementById('chk-culto').checked = cultoSalvo;
+            
+            // 1. Aplica as regras de horário padrão (libera ou bloqueia pelo relógio)
+            aplicarTravasDeHorario();
+
+            // 2. SOBRESCREVE SE JÁ FOI PONTUADO (Trava e pinta de verde)
+            if (ebdSalvo) {
+                document.getElementById('chk-ebd').disabled = true;
+                document.getElementById('item-ebd').classList.remove('locked');
+                document.getElementById('item-ebd').classList.add('scored-green');
+                document.getElementById('lock-msg-ebd').innerHTML = '<span style="color:var(--primary-green)">✅ Já pontuado</span>';
+            } else {
+                document.getElementById('item-ebd').classList.remove('scored-green');
+            }
+
+            if (cultoSalvo) {
+                document.getElementById('chk-culto').disabled = true;
+                document.getElementById('item-culto').classList.remove('locked');
+                document.getElementById('item-culto').classList.add('scored-green');
+                document.getElementById('lock-msg-culto').innerHTML = '<span style="color:var(--primary-green)">✅ Já pontuado</span>';
+            } else {
+                document.getElementById('item-culto').classList.remove('scored-green');
+            }
+
+            // 3. Muda o botão de Salvar se os dois já estiverem concluídos
+            const hojeStr = dataOnlineAtual.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}).replace(/\//g, '-');
+            const btnSalvar = document.getElementById('btn-salvar-domingo');
+
+            if (ebdSalvo && cultoSalvo) {
+                btnSalvar.disabled = true;
+                btnSalvar.innerText = "Pontos do dia concluídos ✨";
+            } else {
+                btnSalvar.innerText = "Salvar Pontos";
+                // Mantém a regra original do botão (só ativa se for a data de hoje)
+                if (dateStr !== hojeStr) btnSalvar.disabled = true;
+            }
+        }
 
     function salvarPontosSemanais() {
         const dateStr = document.getElementById('sunday-date').value;
