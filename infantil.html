@@ -302,6 +302,40 @@
             #passwordModal i.fa-lock { font-size: 2rem !important; margin-bottom: 10px !important; }
             #adminPasswordInput { font-size: 1.5rem !important; margin-bottom: 5px; }
         }
+        /* --- NOTIFICAÇÃO TOAST --- */
+.custom-toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--success);
+    color: white;
+    padding: 16px 24px;
+    border-radius: var(--radius-btn);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 800;
+    font-size: 1rem;
+    z-index: 9999;
+    transform: translateY(150px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.custom-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+@media (max-width: 768px) {
+    .custom-toast {
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        justify-content: center;
+        text-align: center;
+    }
+}
     </style>
 </head>
 <body>
@@ -363,14 +397,13 @@
             </div>
 
             <div id="chamadaHistoryContainer" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
-                </div>
+            </div>
         </div>
-
-        <div id="editPersonModal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h2><i class="fas fa-edit"></i> Editar Dados</h2>
-                <button class="close-btn" onclick="closeEditPersonModal()">&times;</button>
+    </div> <div id="editPersonModal" class="modal-overlay"> <div class="modal-content" style="max-width: 400px; width: 95%;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: var(--primary);"><i class="fas fa-edit"></i> Editar Dados</h3>
+                <button class="btn btn-danger" style="width: auto; padding: 8px 12px; border-radius: 10px;" onclick="closeEditPersonModal()"><i class="fas fa-times"></i></button>
             </div>
             
             <input type="hidden" id="editPersonType">
@@ -378,23 +411,23 @@
             <input type="hidden" id="editPersonOriginalName">
 
             <div class="form-group">
-                <label>Nome Completo</label>
+                <label style="font-size: 0.8rem; font-weight: 700;">Nome Completo</label>
                 <input type="text" id="editPersonNameInput" class="form-input" style="background:#f9fafb;" placeholder="Digite o nome correto...">
             </div>
 
             <div class="form-group">
-                <label>Data de Nascimento</label>
+                <label style="font-size: 0.8rem; font-weight: 700;">Data de Nascimento</label>
                 <input type="date" id="editPersonDob" class="form-input">
             </div>
 
             <div class="form-group">
-                <label>Telefone / WhatsApp</label>
+                <label style="font-size: 0.8rem; font-weight: 700;">Telefone / WhatsApp</label>
                 <input type="tel" id="editPersonPhone" class="form-input" placeholder="(XX) XXXXX-XXXX">
             </div>
 
             <div id="editPersonStudentFields" style="display:none;">
                 <div class="form-group">
-                    <label>Nome do Responsável</label>
+                    <label style="font-size: 0.8rem; font-weight: 700;">Nome do Responsável</label>
                     <input type="text" id="editPersonGuardian" class="form-input" placeholder="Nome do pai/mãe...">
                 </div>
             </div>
@@ -465,10 +498,6 @@
             <div class="filter-bar" id="room-filters-chamada"></div>
 
             <div class="card-section">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                    <div><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Data</label><input type="date" id="dateInput"></div>
-                    <div><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Professores</label><input type="text" id="teacherName" placeholder="Ex: Ana e Bia" oninput="checkCallFormValidity()"></div>
-                </div>
                 <h4 style="margin: 0; color: var(--text-muted);">Toque na foto para marcar:</h4>
                 <div id="kidsList" class="kids-grid"><div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #9ca3af;">Selecione uma sala acima 👆</div></div>
                 <div style="margin-top: 30px; border-top: 1px solid #f3f4f6; padding-top: 20px;">
@@ -1068,6 +1097,38 @@
             renderBirthdays();
         };
 
+        // Função para mostrar notificações bonitas na tela
+        function showToast(message, type = 'success') {
+            let toast = document.getElementById('customToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'customToast';
+                document.body.appendChild(toast);
+            }
+            
+            toast.className = 'custom-toast'; // Reseta as classes
+            
+            if (type === 'error') {
+                toast.style.background = 'var(--danger)';
+                toast.style.boxShadow = '0 10px 25px rgba(239, 68, 68, 0.4)';
+                toast.innerHTML = `<i class="fas fa-times-circle" style="font-size: 1.5rem;"></i> <span>${message}</span>`;
+            } else {
+                toast.style.background = 'var(--success)';
+                toast.style.boxShadow = '0 10px 25px rgba(16, 185, 129, 0.4)';
+                toast.innerHTML = `<i class="fas fa-check-circle" style="font-size: 1.5rem;"></i> <span>${message}</span>`;
+            }
+
+            // Força a animação a reiniciar
+            void toast.offsetWidth; 
+            toast.classList.add('show');
+
+            // Limpa o temporizador antigo e cria um novo para sumir após 3,5 segundos
+            if(window.toastTimeout) clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
         function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
 
         function showSection(id, btn) {
@@ -1327,13 +1388,22 @@
                 }
             });
 
-            alert(`✅ Chamada enviada e pontos de presença somados!`); 
+            // Troque o alert de sucesso por este:
+            showToast('Chamada enviada e pontos de presença somados!'); 
+
             document.querySelectorAll('.kid-card').forEach(c => c.classList.remove('present')); 
             document.getElementById('teacherName').value = ''; 
-            document.getElementById('extraKidName').value = '';
+            
+            let extraKid = document.getElementById('extraKidName');
+            if (extraKid) {
+                extraKid.value = '';
+            }
+            
             checkCallFormValidity();
         } catch(e) { 
-            alert("Erro ao enviar chamada."); console.error(e);
+            // Troque o alert de erro por este:
+            showToast("Erro ao enviar chamada.", "error"); 
+            console.error(e);
         }
         
         btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Chamada'; 
