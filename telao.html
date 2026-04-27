@@ -247,13 +247,25 @@
                 carIconEl.style.display = 'none';
                 photoEl.style.display = 'block';
                 
-                let src = data.photoUrl;
-                if (!src.startsWith('http') && !src.startsWith('data:')) {
+                // Prepara a foto verificando o formato que veio do Firebase
+                let src = data.photoUrl || "";
+                
+                // Configura o plano B caso a imagem falhe ao carregar
+                photoEl.onerror = () => { 
+                    photoEl.src = `https://ui-avatars.com/api/?name=${data.kidName}&background=random&size=300`; 
+                };
+
+                if (src.startsWith('http') || src.startsWith('data:')) {
+                    // 1. Se for a foto do Aviso Rápido tirada na hora (Base64) ou link da web, joga direto na tela
+                    photoEl.src = src;
+                } else if (src !== "") {
+                    // 2. Se for o nome de um arquivo (crianças cadastradas no código), busca na pasta img/
                     let cleanName = src.replace('img/', '');
-                    src = 'img/' + cleanName;
+                    photoEl.src = 'img/' + cleanName;
+                } else {
+                    // 3. Se por algum motivo chegou vazio, cria a bolinha com as letras
+                    photoEl.src = `https://ui-avatars.com/api/?name=${data.kidName}&background=random&size=300`;
                 }
-                photoEl.onerror = () => { photoEl.src = `https://ui-avatars.com/api/?name=${data.kidName}&background=random&size=300`; };
-                photoEl.src = src;
                 
                 labelTop.innerText = "Favor comparecer à:";
                 infoBadge.innerText = data.roomName;

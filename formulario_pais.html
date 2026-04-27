@@ -372,7 +372,7 @@
                 const isRegistered = alunosCadastrados.has(kid.name);
                 const div = document.createElement('div'); 
                 div.className = isRegistered ? 'kid-card registered' : 'kid-card';
-                const imgSrc = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+                const imgSrc = (kid.photo.startsWith('http') || kid.photo.startsWith('data:')) ? kid.photo : `img/${kid.photo}`;
                 
                 let badgeHtml = isRegistered ? `<div class="badge-cadastrado"><i class="fas fa-check"></i> Cadastrado</div>` : '';
 

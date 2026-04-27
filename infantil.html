@@ -425,6 +425,10 @@
                 <input type="tel" id="editPersonPhone" class="form-input" placeholder="(XX) XXXXX-XXXX">
             </div>
 
+            <div class="form-group">
+                <label style="font-size: 0.8rem; font-weight: 700;"><i class="fas fa-camera"></i> Atualizar Foto (Firebase)</label>
+                <input type="file" id="editPersonPhotoInput" accept="image/*" class="form-input" style="padding: 8px; background: white; border: 2px dashed var(--primary);">
+            </div>
             <div id="editPersonStudentFields" style="display:none;">
                 <div class="form-group">
                     <label style="font-size: 0.8rem; font-weight: 700;">Nome do Responsável</label>
@@ -524,9 +528,43 @@
 
         <section id="telao" class="content-section hidden">
             <div class="section-title"><i class="fas fa-bullhorn"></i> Chamar Pais no Telão</div>
-            <p style="color:var(--text-muted);">Selecione a turma e depois a criança.</p>
+
+            <div class="card-section" style="border: 2px dashed var(--secondary); background: #fffbeb; margin-bottom: 25px; padding: 15px;">
+                <div style="font-size: 0.85rem; font-weight: 800; color: var(--secondary); margin-bottom: 10px;">
+                    <i class="fas fa-bolt"></i> Visitante Rápido
+                </div>
+                
+                <div class="person-card" style="padding: 10px; margin: 0; border: 1px solid #fcd34d; background: white;">
+                    
+                    <label for="instantKidPhoto" style="width: 50px; height: 50px; border-radius: 50%; background: #fef3c7; display: flex; align-items: center; justify-content: center; color: var(--secondary); cursor: pointer; flex-shrink: 0; margin-right: 15px; border: 2px solid var(--secondary);">
+                        <i class="fas fa-camera" style="font-size: 1.2rem;"></i>
+                        <input type="file" id="instantKidPhoto" accept="image/*" capture="camera" style="display: none;">
+                    </label>
+
+                    <div class="person-info" style="flex: 1;">
+                        <input type="text" id="instantKidName" placeholder="Nome da criança..." style="border: none; background: transparent; padding: 0; font-size: 1rem; font-weight: 800; width: 100%; box-shadow: none; outline: none; color: var(--text-main);">
+                        <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">Recepção / Visitante</p>
+                    </div>
+
+                    <div class="person-actions">
+                        <button class="btn btn-primary" id="btn-submit-instant" style="width:auto; padding:12px 18px; border-radius:50px; background: var(--secondary); box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);" onclick="submitInstantAnnouncement()">
+                            <i class="fas fa-bullhorn"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <p style="color:var(--text-muted); font-weight: 800; margin-top: 30px;">Ou busque um aluno já cadastrado:</p>
+            
             <div class="form-group"><label style="font-size: 0.8rem; font-weight: 700;">Sala</label><div class="filter-bar" id="room-filters-telao"></div></div>
-            <div class="card-section"><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Buscar Criança</label><input type="text" id="searchTelao" placeholder="🔍 Digite o nome da criança..." oninput="renderTelaoList()"><div id="telaoList" class="people-grid" style="margin-top:20px;"><div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #9ca3af;">Selecione uma sala acima 👆</div></div></div>
+            
+            <div class="card-section">
+                <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Buscar Criança</label>
+                <input type="text" id="searchTelao" placeholder="🔍 Digite o nome da criança..." oninput="renderTelaoList()">
+                <div id="telaoList" class="people-grid" style="margin-top:20px;">
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #9ca3af;">Selecione uma sala acima 👆</div>
+                </div>
+            </div>
         </section>
 
         <section id="escalas" class="content-section hidden">
@@ -608,13 +646,32 @@
                 <div class="form-group"><label>Responsável</label><input type="text" id="regGuardian"></div>
                 <div class="form-group"><label>WhatsApp Resp.</label><input type="tel" id="regPhone" placeholder="DDD+Número"></div>
                 <div class="form-group">
-                    <label>Nome da Foto (opcional)</label>
-                    <input type="text" id="regPhoto" placeholder="Ex: joaozinho (sem o .png)">
-                    <small style="color:var(--text-muted); font-size:0.75rem;">O sistema coloca "img/" e ".png" sozinho.</small>
+                    <label>Foto do Aluno (opcional)</label>
+                    <input type="file" id="regPhotoFile" accept="image/*" style="padding: 10px;">
+                    <small style="color:var(--text-muted); font-size:0.75rem;">Selecione uma imagem direto do seu celular ou PC.</small>
                 </div>
                 <div class="form-group">
                     <label>Sala</label>
                     <select id="regRoom">
+                        <option value="Berçário">Berçário</option>
+                        <option value="Alfa">Alfa</option>
+                        <option value="Beta">Beta</option>
+                        <option value="Gama">Gama</option>
+                        <option value="Ômega">Ômega</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="teacherFields" class="hidden">
+                <div class="form-group"><label>WhatsApp Professor</label><input type="tel" id="regTeacherPhone" placeholder="DDD+Número"></div>
+                <div class="form-group">
+                    <label>Foto do Professor (opcional)</label>
+                    <input type="file" id="regTeacherPhotoFile" accept="image/*" style="padding: 10px;">
+                </div>
+                <div class="form-group">
+                    <label>Sala Preferencial</label>
+                    <select id="regTeacherRoom">
+                        <option value="">(Opcional) Selecione a Turma</option>
                         <option value="Berçário">Berçário</option>
                         <option value="Alfa">Alfa</option>
                         <option value="Beta">Beta</option>
@@ -653,6 +710,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <script>
         // ============================================
@@ -876,6 +934,9 @@
                                 if(data.dob !== undefined) kidToUpdate.dob = data.dob;
                                 if(data.phone !== undefined) kidToUpdate.phone = data.phone;
                                 if(data.guardian !== undefined) kidToUpdate.guardian = data.guardian;
+                                
+                                // 👉 ESTA É A LINHA QUE FALTAVA (Atualiza a foto!)
+                                if(data.photo !== undefined) kidToUpdate.photo = data.photo; 
                             }
                         } else if (data.isNew && !data.deleted) {
                             // Se não existe na lista, é um aluno novo! Injeta.
@@ -907,6 +968,9 @@
                             if(data.dob !== undefined) teacherToUpdate.dob = data.dob;
                             if(data.phone !== undefined) teacherToUpdate.phone = data.phone;
                             if(data.room !== undefined) teacherToUpdate.room = data.room;
+                            
+                            // 👉 ESTA É A LINHA QUE FALTAVA PARA PROFESSORES
+                            if(data.photo !== undefined) teacherToUpdate.photo = data.photo; 
                         }
                     } else if (data.isNew && !data.deleted) {
                          fixedTeachersData.push({
@@ -964,6 +1028,7 @@
             updateTeacherListByRoomSelect();
         }
     });
+        
 }
 
         function autoSelectCurrentDate() {
@@ -995,14 +1060,32 @@
         let isAdminMode = false;
 
         function getTeacherPhotoUrl(teacherObjOrName) {
+            let photoStr = null;
+            let nameStr = "";
+            
+            // Verifica se recebemos o objeto do professor inteiro ou só o nome
             if (typeof teacherObjOrName === 'object' && teacherObjOrName !== null) {
-                if (teacherObjOrName.photo) return `img/${teacherObjOrName.photo}`;
-                return `https://ui-avatars.com/api/?name=${teacherObjOrName.name}&background=random`;
+                photoStr = teacherObjOrName.photo;
+                nameStr = teacherObjOrName.name;
+            } else {
+                const teacherFound = fixedTeachersData.find(t => t.name === teacherObjOrName);
+                if (teacherFound) {
+                    photoStr = teacherFound.photo;
+                    nameStr = teacherFound.name;
+                } else {
+                    nameStr = teacherObjOrName;
+                }
             }
-            const teacherFound = fixedTeachersData.find(t => t.name === teacherObjOrName);
-            if (teacherFound && teacherFound.photo) return `img/${teacherFound.photo}`;
-            if (!teacherObjOrName) return '';
-            return `https://ui-avatars.com/api/?name=${teacherObjOrName}&background=random`;
+
+            // Se tem foto, verifica se é link de internet (http), Base64 (data:) ou arquivo local (img/)
+            if (photoStr) {
+                if (photoStr.startsWith('http') || photoStr.startsWith('data:')) return photoStr;
+                return `img/${photoStr}`;
+            }
+            
+            // Se não tiver foto nenhuma, gera a bolinha com as letras
+            if (!nameStr) return '';
+            return `https://ui-avatars.com/api/?name=${nameStr}&background=random`;
         }
 
         function formatDateToInput(dateStr) {
@@ -1184,7 +1267,7 @@
             if(upcomingStudents.length === 0) listStudents.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:10px;">Nenhum aluno aniversariante em ' + monthNames[currentMonth] + '</div>';
             else {
                 upcomingStudents.forEach(kid => {
-                    const img = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+                    const img = (kid.photo.startsWith('http') || kid.photo.startsWith('data:')) ? kid.photo : `img/${kid.photo}`;
                     const div = document.createElement('div'); div.className = 'birthday-card';
                     div.innerHTML = `<div class="birthday-day"><span>DIA</span><strong>${kid.day}</strong></div><img src="${img}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'"><div style="flex:1;"><div style="font-weight:800; color:var(--text-main);">${kid.name}</div><div style="font-size:0.8rem; color:var(--text-muted);">🎂 Parabéns!</div></div><button class="btn-wa-mini" onclick="window.open('https://wa.me/55${kid.phone}?text=Parabéns ${kid.name}! O Ministério Kids ama você! 🎉')"><i class="fab fa-whatsapp"></i></button>`;
                     listStudents.appendChild(div);
@@ -1265,7 +1348,7 @@
                 checkCallFormValidity(); 
             };
             
-            const imgSrc = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+            const imgSrc = (kid.photo.startsWith('http') || kid.photo.startsWith('data:')) ? kid.photo : `img/${kid.photo}`;
             div.innerHTML = `
                 <img src="${imgSrc}" class="kid-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'">
                 <div class="kid-name">${kid.name}</div>
@@ -1540,7 +1623,7 @@
             let found = false;
             listToRender.forEach(kid => {
                 if (search && !kid.name.toLowerCase().includes(search)) return;
-                found = true; const img = kid.photo.startsWith('http') ? kid.photo : `img/${kid.photo}`;
+                found = true; const img = (kid.photo.startsWith('http') || kid.photo.startsWith('data:')) ? kid.photo : `img/${kid.photo}`;
                 const div = document.createElement('div'); div.className = 'person-card'; div.style.cursor = 'pointer'; div.onclick = () => sendAlertToTelao(kid.name, kid.roomName, img);
                 div.innerHTML = `<img src="${img}" class="person-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'"><div class="person-info"><h4 style="font-size:1.1rem;">${kid.name}</h4><p style="color:var(--primary); font-weight:800;">${kid.roomName}</p></div><div class="person-actions"><button class="btn btn-primary" style="width:auto; padding:8px 15px; border-radius:50px;"><i class="fas fa-bullhorn"></i></button></div>`;
                 container.appendChild(div);
@@ -1552,6 +1635,65 @@
             if(!confirm(`Deseja chamar os pais de ${name} no telão?`)) return;
             const alertData = { kidName: name, roomName: room, photoUrl: photo, timestamp: firebase.database.ServerValue.TIMESTAMP };
             db.ref('chamados').push(alertData).then(() => alert(`📢 Enviado: ${name}`)).catch(e => alert("Erro ao enviar."));
+        }
+
+        // Função do botão de Aviso Rápido (Visitantes)
+        async function sendQuickAlert() {
+            const nameInput = document.getElementById('quickAlertName').value.trim();
+            const roomInput = document.getElementById('quickAlertRoom').value;
+            const fileInput = document.getElementById('quickAlertPhoto');
+            const btn = document.getElementById('btnQuickAlert');
+
+            if (!nameInput) {
+                alert("⚠️ Por favor, digite o nome da criança antes de enviar.");
+                return;
+            }
+
+            if(!confirm(`Deseja chamar os pais de ${nameInput} no telão?`)) return;
+
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            btn.disabled = true;
+
+            try {
+                let photoData = "";
+
+                // Se o professor tirou a foto, usa a nossa função mágica de comprimir
+                if (fileInput && fileInput.files.length > 0) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando Foto...';
+                    const file = fileInput.files[0];
+                    photoData = await comprimirFotoParaBase64(file);
+                } else {
+                    // Se o professor estava na correria e não tirou foto, gera as letras iniciais
+                    photoData = `https://ui-avatars.com/api/?name=${nameInput}&background=random`;
+                }
+
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando para Telão...';
+
+                // Prepara o pacote (Adiciona "Visitante" no nome para quem tá controlando o telão saber)
+                const alertData = { 
+                    kidName: nameInput + " (Visitante)", 
+                    roomName: roomInput, 
+                    photoUrl: photoData, 
+                    timestamp: firebase.database.ServerValue.TIMESTAMP 
+                };
+
+                // Envia direto pro Firebase
+                await db.ref('chamados').push(alertData);
+                
+                showToast(`📢 Aviso rápido enviado: ${nameInput}`);
+                
+                // Limpa os campos para o próximo uso
+                document.getElementById('quickAlertName').value = '';
+                fileInput.value = '';
+
+            } catch (error) {
+                alert("Erro ao enviar: " + error.message);
+                console.error(error);
+            } finally {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }
         }
 
         function generateDateFilters(containerId, callback, currentSelectedDate, hidePastDates = false) {
@@ -1817,7 +1959,7 @@
                             editButton = `<button class="btn-edit-mini" onclick="openPasswordModal()"><i class="fas fa-lock"></i></button>`;
                         }
 
-                        const imgSrc = k.photo.startsWith('http') ? k.photo : `img/${k.photo}`;
+                        const imgSrc = (k.photo.startsWith('http') || k.photo.startsWith('data:')) ? k.photo : `img/${k.photo}`;
                         const div = document.createElement('div'); 
                         div.className = 'person-card';
                         
@@ -1938,7 +2080,8 @@
             document.getElementById('editPersonModal').classList.remove('active');
         }
 
-        function savePersonEdit() {
+        // Função de salvar atualizada e à prova de bugs
+        async function savePersonEdit() {
             const type = document.getElementById('editPersonType').value;
             const room = document.getElementById('editPersonRoom').value;
             const originalName = document.getElementById('editPersonOriginalName').value;
@@ -1947,6 +2090,7 @@
             const dob = document.getElementById('editPersonDob').value;
             const phone = document.getElementById('editPersonPhone').value;
             const guardian = document.getElementById('editPersonGuardian').value;
+            const fileInput = document.getElementById('editPersonPhotoInput');
 
             if (!newName) return alert("O nome não pode ficar vazio!");
 
@@ -1956,7 +2100,8 @@
             const oldNodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeOriginalName}` : `dados_extras/professores/${safeOriginalName}`;
             const newNodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeNewName}` : `dados_extras/professores/${safeNewName}`;
 
-            const payload = { name: newName, dob, phone };
+            // NOVO: O isNew: true garante que o sistema sempre leia a foto mesmo após alterar nome!
+            const payload = { name: newName, dob, phone, isNew: true };
             if(type === 'aluno') payload.guardian = guardian;
 
             const btn = document.querySelector('#editPersonModal .btn-success');
@@ -1964,19 +2109,31 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
             btn.disabled = true;
 
-            if (safeNewName !== safeOriginalName) {
-                db.ref(newNodePath).update(payload).then(() => {
-                    db.ref(oldNodePath).update({ deleted: true }).then(() => {
-                        closeEditPersonModal();
-                        alert("✅ Dados e nome atualizados com sucesso!");
-                    });
-                }).finally(() => { btn.innerHTML = btnOriginalText; btn.disabled = false; });
-            } else {
-                db.ref(oldNodePath).update(payload).then(() => {
-                    closeEditPersonModal();
-                    alert("✅ Dados salvos com sucesso!");
-                }).catch(e => alert("Erro ao salvar: " + e.message))
-                .finally(() => { btn.innerHTML = btnOriginalText; btn.disabled = false; });
+            try {
+                if (fileInput && fileInput.files.length > 0) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subindo Foto...';
+                    const file = fileInput.files[0];
+                    payload.photo = await comprimirFotoParaBase64(file);
+                }
+
+                if (safeNewName !== safeOriginalName) {
+                    await db.ref(newNodePath).update(payload);
+                    await db.ref(oldNodePath).update({ deleted: true });
+                } else {
+                    await db.ref(oldNodePath).update(payload);
+                }
+
+                closeEditPersonModal();
+                showToast("Dados e foto salvos com sucesso!");
+                
+                if(fileInput) fileInput.value = ''; 
+
+            } catch (e) {
+                // NOVO: Mostra o erro na tela se a imagem der pau
+                alert("Erro ao salvar: " + e.message);
+            } finally {
+                btn.innerHTML = btnOriginalText;
+                btn.disabled = false;
             }
         }
 
@@ -1995,6 +2152,46 @@
                 alert("🗑️ Registro apagado com sucesso!");
             }).catch(e => alert("Erro ao apagar: " + e.message));
         }
+        // Função mágica que diminui a foto e transforma em texto (Base64)
+        // Função mágica que diminui a foto e transforma em texto (Base64) - AGORA COM PROTEÇÃO CONTRA ERROS
+        function comprimirFotoParaBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 300; 
+                        const MAX_HEIGHT = 300;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const base64String = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(base64String);
+                    };
+                    // NOVO: Se o navegador não conseguir ler a imagem (Ex: Foto HEIC de iPhone), ele avisa!
+                    img.onerror = () => {
+                        reject(new Error("Formato incompatível. Tire um 'print' da foto, recorte e envie o print!"));
+                    };
+                    img.src = event.target.result;
+                };
+                reader.onerror = (error) => reject(new Error("Falha ao carregar o arquivo."));
+            });
+        }
+
+        // Sua função de salvar atualizada
         async function submitRegistration() {
             const name = document.getElementById('regName').value.trim();
             const dob = document.getElementById('regDob').value;
@@ -2004,61 +2201,75 @@
                 return;
             }
 
-            // Cria um nome seguro para salvar no Firebase (sem caracteres especiais proibidos)
             const safeName = name.replace(/[.#$[\]]/g, ''); 
             let nodePath = '';
-            
-            // isNew: true avisa o sistema que não é só uma edição, mas uma pessoa nova
             let payload = { name: name, dob: dob, isNew: true };
 
-            if (currentAdminTab === 'alunos') {
-                const guardian = document.getElementById('regGuardian').value;
-                const phone = document.getElementById('regPhone').value;
-                const roomVal = document.getElementById('regRoom').value; 
-                
-                // Corrige o nome da sala para bater com o banco de dados interno
-                let roomKey = roomVal.toLowerCase();
-                if(roomKey === 'berçário') roomKey = 'berçario';
-
-                const photoInput = document.getElementById('regPhoto').value.trim();
-
-                payload.guardian = guardian;
-                payload.phone = phone;
-                payload.photo = photoInput ? photoInput + ".png" : ""; // Coloca o .png sozinho!
-                
-                nodePath = `dados_extras/alunos/${roomKey}/${safeName}`;
-            } else {
-                const phone = document.getElementById('regTeacherPhone').value;
-                const room = document.getElementById('regTeacherRoom').value;
-                
-                payload.phone = phone;
-                payload.room = room;
-                payload.photo = ""; // Usa avatar automático
-                
-                nodePath = `dados_extras/professores/${safeName}`;
-            }
-
-            // Muda o texto do botão para dar feedback
             const btn = document.querySelector('#adminFormContainer .btn-success');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
             btn.disabled = true;
 
             try {
-                // Salva no banco de dados
-                await db.ref(nodePath).update(payload);
-                alert("✅ Cadastro salvo com sucesso!");
+                let photoDataURI = "";
                 
-                // Limpa os campos após salvar
+                // Verifica qual input usar (Aluno ou Professor)
+                const fileInputId = currentAdminTab === 'alunos' ? 'regPhotoFile' : 'regTeacherPhotoFile';
+                const fileInput = document.getElementById(fileInputId);
+
+                // Se escolheu uma foto, aplica o truque do Base64
+                if (fileInput && fileInput.files.length > 0) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando Foto...';
+                    const file = fileInput.files[0];
+                    // Chama a função que criamos ali em cima
+                    photoDataURI = await comprimirFotoParaBase64(file);
+                }
+
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando Dados...';
+
+                // Prepara os dados
+                if (currentAdminTab === 'alunos') {
+                    const guardian = document.getElementById('regGuardian').value;
+                    const phone = document.getElementById('regPhone').value;
+                    const roomVal = document.getElementById('regRoom').value; 
+                    
+                    let roomKey = roomVal.toLowerCase();
+                    if(roomKey === 'berçário') roomKey = 'berçario';
+
+                    payload.guardian = guardian;
+                    payload.phone = phone;
+                    payload.photo = photoDataURI; // Salva o texto gigante da foto aqui
+                    
+                    nodePath = `dados_extras/alunos/${roomKey}/${safeName}`;
+                } else {
+                    const phone = document.getElementById('regTeacherPhone').value;
+                    const room = document.getElementById('regTeacherRoom').value;
+                    
+                    payload.phone = phone;
+                    payload.room = room;
+                    payload.photo = photoDataURI; // Salva o texto gigante da foto aqui
+                    
+                    nodePath = `dados_extras/professores/${safeName}`;
+                }
+
+                // Envia direto para o seu Realtime Database
+                await db.ref(nodePath).update(payload);
+                showToast("Cadastro salvo com sucesso!");
+                
+                // Limpa os campos
                 document.getElementById('regName').value = '';
                 document.getElementById('regDob').value = '';
                 document.getElementById('regGuardian').value = '';
                 document.getElementById('regPhone').value = '';
                 document.getElementById('regTeacherPhone').value = '';
+                if(document.getElementById('regPhotoFile')) document.getElementById('regPhotoFile').value = '';
+                if(document.getElementById('regTeacherPhotoFile')) document.getElementById('regTeacherPhotoFile').value = '';
                 
-                toggleNewForm(); // Fecha o formulário
+                toggleNewForm(); 
+                
             } catch (error) {
                 alert("Erro ao salvar: " + error.message);
+                console.error(error);
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -2104,7 +2315,7 @@
         if(allKidsImersao.length === 0) { container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #9ca3af; padding: 20px;">Nenhuma criança encontrada.</div>'; return; }
 
         allKidsImersao.forEach(k => {
-            const imgSrc = k.photo.startsWith('http') ? k.photo : `img/${k.photo}`;
+            const imgSrc = (k.photo.startsWith('http') || k.photo.startsWith('data:')) ? k.photo : `img/${k.photo}`;
             container.innerHTML += `<div class="person-card" style="border-left: 5px solid var(--primary); align-items: center;"><img src="${imgSrc}" class="person-img" onerror="this.src='https://ui-avatars.com/api/?name=${k.name}&background=random'"><div class="person-info" style="flex:1; overflow:hidden;"><h4 style="margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${k.name}</h4><p style="margin:0; font-size:0.8rem; color:var(--text-muted);">${k.room}</p></div><div style="background: var(--success); color: white; padding: 8px 12px; border-radius: 12px; font-weight: 800; font-size: 1.1rem; text-align:center; min-width: 60px;">${k.pts}<br><span style="font-size:0.6rem; font-weight:700;">PTS</span></div></div>`;
         });
     }
@@ -2180,6 +2391,62 @@
                 });
             });
         }
+
+        // ============================================
+        // FUNÇÕES DO TELÃO - AVISO RÁPIDO (CORRIGIDAS)
+        // ============================================
+        function clearInstantForm() {
+            document.getElementById('instantKidName').value = '';
+            document.getElementById('instantKidPhoto').value = '';
+        }
+
+        async function submitInstantAnnouncement() {
+            const name = document.getElementById('instantKidName').value.trim();
+            const fileInput = document.getElementById('instantKidPhoto');
+            const btn = document.getElementById('btn-submit-instant');
+            const originalText = btn.innerHTML;
+
+            if (!name) {
+                alert("⚠️ Por favor, digite o nome da criança!");
+                return;
+            }
+
+            if(!confirm(`Deseja chamar os pais de ${name} no telão?`)) return;
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                let photoDataURI = "";
+                
+                // Pega a foto se o professor clicou na câmera
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    photoDataURI = await comprimirFotoParaBase64(file);
+                } else {
+                    photoDataURI = `https://ui-avatars.com/api/?name=${name}&background=random`;
+                }
+
+                const alertData = { 
+                    kidName: name + " (Visitante)", 
+                    roomName: "Recepção Infantil", 
+                    photoUrl: photoDataURI, 
+                    timestamp: firebase.database.ServerValue.TIMESTAMP 
+                };
+
+                await db.ref('chamados').push(alertData);
+                
+                showToast(`📢 Aviso enviado para ${name}!`);
+                clearInstantForm();
+                
+            } catch (error) {
+                alert("Erro ao enviar aviso: " + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
     </script>
 </body>
 </html>
