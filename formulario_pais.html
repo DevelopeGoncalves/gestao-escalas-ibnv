@@ -188,7 +188,7 @@
                         <input type="date" id="inp-nascimento" required>
                     </div>
 
-                    <div class="form-highlight">
+                    <div class="form-highlight" id="box-gincana">
                         <label><i class="fas fa-campground"></i> O seu filho(a) vai participar da gincana anual <b>"Família em Campo"</b>?</label>
                         <select id="inp-gincana" required>
                             <option value="" disabled selected>Selecione uma opção...</option>
@@ -417,6 +417,16 @@
             document.getElementById('inp-nascimento').value = kidData.dob || '';
             document.getElementById('inp-gincana').value = '';
 
+            // --- INÍCIO: REGRA PARA ESCONDER DO BERÇÁRIO ---
+            if (roomKey === 'berçario') {
+                document.getElementById('box-gincana').style.display = 'none';
+                document.getElementById('inp-gincana').removeAttribute('required');
+            } else {
+                document.getElementById('box-gincana').style.display = 'block';
+                document.getElementById('inp-gincana').setAttribute('required', 'required');
+            }
+            // --- FIM: REGRA PARA ESCONDER DO BERÇÁRIO ---
+
             document.getElementById('step-1').classList.remove('active');
             document.getElementById('step-2').classList.add('active');
             document.getElementById('btn-voltar').style.display = 'block';
@@ -512,6 +522,18 @@
             document.getElementById('inp-telefone').value = dadosSalvos.telefone || '';
             document.getElementById('inp-nascimento').value = dadosSalvos.nascimento || '';
             document.getElementById('inp-gincana').value = dadosSalvos.gincana || '';
+
+            // --- INÍCIO: REGRA PARA ESCONDER DO BERÇÁRIO ---
+            if (roomKey === 'berçario') {
+                document.getElementById('box-gincana').style.display = 'none';
+                document.getElementById('inp-gincana').removeAttribute('required');
+            } else {
+                document.getElementById('box-gincana').style.display = 'block';
+                document.getElementById('inp-gincana').setAttribute('required', 'required');
+            }
+            // --- FIM: REGRA PARA ESCONDER DO BERÇÁRIO ---
+
+            // Troca visual do botão de Salvar e mostra o de Excluir
 
             // Troca visual do botão de Salvar e mostra o de Excluir
             document.getElementById('btn-enviar').innerHTML = 'Atualizar Dados <i class="fas fa-sync"></i>';
