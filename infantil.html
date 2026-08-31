@@ -2243,7 +2243,7 @@
             const safeOriginalName = originalName.replace(/[.#$[\]]/g, ''); 
             const safeNewName = newName.replace(/[.#$[\]]/g, ''); 
 
-            const payload = { name: newName, dob, phone, isNew: true };
+            const payload = { name: newName, dob, phone, isNew: true, deleted: false };
             if (type === 'aluno') payload.guardian = guardian;
             if (type === 'professor') payload.room = selectedRooms.map(rk => professorRoomsData[rk].name).join(', ');
 
@@ -2366,7 +2366,7 @@
 
             const safeName = name.replace(/[.#$[\]]/g, ''); 
             let nodePath = '';
-            let payload = { name: name, dob: dob, isNew: true };
+            let payload = { name: name, dob: dob, isNew: true, deleted: false };
 
             const btn = document.querySelector('#adminFormContainer .btn-success');
             const originalText = btn.innerHTML;
