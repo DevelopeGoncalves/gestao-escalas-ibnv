@@ -686,12 +686,11 @@
                         <option value="Berçário">Berçário</option>
                         <option value="Alfa">Alfa</option>
                         <option value="Beta">Beta</option>
-                        <option value="Gama">Gama</option>
-                        <option value="Ômega">Ômega</option>
+                        <option value="Gama + Ômega">Gama + Ômega</option>
                     </select>
                 </div>
             </div>
-                <div id="teacherFields" class="hidden"><div class="form-group"><label>WhatsApp Professor</label><input type="tel" id="regTeacherPhone" placeholder="DDD+Número"></div><div class="form-group"><label>Sala Preferencial</label><select id="regTeacherRoom"><option value="">(Opcional) Selecione a Turma</option><option value="Berçário">Berçário</option><option value="Alfa">Alfa</option><option value="Beta">Beta</option><option value="Gama">Gama</option><option value="Ômega">Ômega</option></select></div></div>
+                <div id="teacherFields" class="hidden"><div class="form-group"><label>WhatsApp Professor</label><input type="tel" id="regTeacherPhone" placeholder="DDD+Número"></div><div class="form-group"><label>Sala Preferencial</label><select id="regTeacherRoom"><option value="">(Opcional) Selecione a Turma</option><option value="Berçário">Berçário</option><option value="Alfa">Alfa</option><option value="Beta">Beta</option><option value="Gama + Ômega">Gama + Ômega</option></select></div></div>
                 <div style="display:flex; gap:10px;"><button class="btn btn-danger" onclick="toggleNewForm()">Cancelar</button><button class="btn btn-success" onclick="submitRegistration()">Salvar</button></div>
             </div>
             <div id="adminListContainer" class="people-grid"></div>
@@ -746,6 +745,9 @@
         // ============================================
         const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz-zw2zwET3iSgtNKasbc4NuCIrmJuJ3k3gPk9YhtFW3oNx1YbyQGe0zbXeUre0uBxxIg/exec';
         
+        // Salas "de verdade" das crianças — cada aluno e cada pontuação continua
+        // pertencendo a UMA destas salas, exatamente como sempre foi (isso é o
+        // que o familia-em-campo.html também usa para calcular a pontuação).
         const roomsData = {
             berçario: { name: "Berçário", age: "0-2 anos", icon: "👶", color: "#6C63FF" },
             alfa: { name: "Alfa", age: "3-4 anos", icon: "🧸", color: "#FF6584" },
@@ -754,10 +756,27 @@
             ômega: { name: "Ômega", age: "9-11 anos", icon: "📚", color: "#ED8936" }
         };
 
-        // Chaves antigas ("gama_omega") que podem ter ficado gravadas no Firebase
-        // durante um teste de unificação de salas que foi desfeito. Usadas só para
-        // não perder nenhuma escala/aluno/pontuação que tenha sido salva ali.
-        const LEGACY_MERGED_ROOM_KEYS = ['gama_omega'];
+        // Salas usadas para ESCALA, CHAMADA e o cadastro/filtro de PROFESSORES:
+        // Gama e Ômega aparecem aqui como uma turma só ("Gama + Ômega"), porque
+        // os professores trabalham juntos nas duas. Os ALUNOS continuam com
+        // suas salas separadas normalmente (ver roomsData/kidsData acima).
+        const professorRoomsData = {
+            berçario: roomsData.berçario,
+            alfa: roomsData.alfa,
+            beta: roomsData.beta,
+            gama_omega: { name: "Gama + Ômega", age: "7-11 anos", icon: "⚽", color: "#48BB78" }
+        };
+
+        // Quando a Chamada é feita na sala combinada "Gama + Ômega", esta lista
+        // diz quais salas reais de alunos entram nela — assim a pontuação de
+        // cada criança continua sendo salva na sala certa (gama_ ou ômega_).
+        const COMBINED_ROOM_MEMBERS = { gama_omega: ['gama', 'ômega'] };
+
+        // Chave antiga que pode ter ficado gravada por engano em
+        // "dados_extras/alunos" durante um teste de unificação de salas que foi
+        // desfeito. Alunos nunca pertencem de fato a "gama_omega" — isso é usado
+        // só para não perder nenhum dado que tenha sido salvo ali por engano.
+        const LEGACY_MERGED_ALUNOS_ROOM_KEYS = ['gama_omega'];
 
         const kidsData = {
             berçario: [ 
@@ -900,7 +919,8 @@
         let allDates = [];
 
         function initScheduleStructure() {
-            Object.keys(roomsData).forEach(key => { scheduleData[key] = { ...roomsData[key], schedules: [] }; });
+            // Escalas usam as salas de PROFESSORES (Gama + Ômega juntas)
+            Object.keys(professorRoomsData).forEach(key => { scheduleData[key] = { ...professorRoomsData[key], schedules: [] }; });
         }
         initScheduleStructure();
 
@@ -923,17 +943,14 @@
                 }
             });
 
-            // Compatibilidade: um teste anterior de unificação de salas pode ter
-            // deixado escalas gravadas em "gama_omega". Só LEITURA (não apaga nada) —
-            // exibe essas escalas também em Gama e Ômega para não sumir nada.
-            LEGACY_MERGED_ROOM_KEYS.forEach(legacyKey => {
-                const legacySchedules = data[legacyKey];
-                if (!legacySchedules || !legacySchedules.length) return;
-                ['gama', 'ômega'].forEach(rk => {
-                    if (!scheduleData[rk]) return;
-                    scheduleData[rk].schedules = scheduleData[rk].schedules.concat(legacySchedules);
-                });
-                legacySchedules.forEach(item => {
+            // Compatibilidade: escalas antigas que ainda estejam gravadas
+            // separadamente em "gama" e "ômega" (de antes da unificação dos
+            // professores) continuam aparecendo, agora dentro de "Gama + Ômega".
+            ['gama', 'ômega'].forEach(oldKey => {
+                const oldSchedules = data[oldKey];
+                if (!oldSchedules || !oldSchedules.length) return;
+                scheduleData.gama_omega.schedules = scheduleData.gama_omega.schedules.concat(oldSchedules);
+                oldSchedules.forEach(item => {
                     if (!allDates.includes(item.date)) allDates.push(item.date);
                 });
             });
@@ -1182,8 +1199,8 @@
             };
             containerEscala.appendChild(btnAllRooms);
 
-            Object.keys(roomsData).forEach(key => {
-                const r = roomsData[key];
+            Object.keys(professorRoomsData).forEach(key => {
+                const r = professorRoomsData[key];
                 const btn = document.createElement('button');
                 btn.className = 'pill-btn';
                 btn.innerHTML = `${r.icon} ${r.name}`;
@@ -1196,17 +1213,17 @@
                 containerEscala.appendChild(btn);
             });
 
-            generateRoomFilters('room-filters-chamada', selectRoomChamada);
+            generateRoomFilters('room-filters-chamada', selectRoomChamada, professorRoomsData);
             generateRoomFilters('room-filters-telao', (k, b) => { selectedRoomKeyTelao = k; togglePill(b); renderTelaoList(); });
             generateRoomFilters('room-filters-licoes', (k, b) => { selectedRoomKeyLicoes = k; togglePill(b); reloadLessonView(); });
-            
+
             generateRoomFilters('room-filters-admin-teachers', (k, b) => {
                 const btns = document.querySelectorAll('#room-filters-admin-teachers .pill-btn');
                 btns.forEach(btnEl => btnEl.classList.remove('active'));
                 if(selectedAdminTeacherRoom === k) { selectedAdminTeacherRoom = null; }
                 else { selectedAdminTeacherRoom = k; b.classList.add('active'); }
                 renderAdminPeople();
-            });
+            }, professorRoomsData);
 
             generateRoomFilters('room-filters-admin-students', (k, b) => {
                 const btns = document.querySelectorAll('#room-filters-admin-students .pill-btn');
@@ -1222,15 +1239,15 @@
                 if(selectedHistoryRoom === k) { selectedHistoryRoom = null; }
                 else { selectedHistoryRoom = k; b.classList.add('active'); }
                 renderHistory();
-            });
+            }, professorRoomsData);
 
             generateMonthFilters('month-filters-history', (val) => { selectedHistoryMonth = val; renderHistory(); });
 
             const selectRoom = document.getElementById('modalRoomSelect');
-            Object.keys(roomsData).forEach(key => {
+            Object.keys(professorRoomsData).forEach(key => {
                 const opt = document.createElement('option');
                 opt.value = key;
-                opt.innerText = roomsData[key].name;
+                opt.innerText = professorRoomsData[key].name;
                 selectRoom.appendChild(opt);
             });
 
@@ -1359,10 +1376,10 @@
             }
         }
 
-        function generateRoomFilters(containerId, callback) {
+        function generateRoomFilters(containerId, callback, roomsSource = roomsData) {
             const container = document.getElementById(containerId); container.innerHTML = '';
-            Object.keys(roomsData).forEach(key => {
-                const r = roomsData[key];
+            Object.keys(roomsSource).forEach(key => {
+                const r = roomsSource[key];
                 const btn = document.createElement('button'); btn.className = 'pill-btn'; btn.innerHTML = `${r.icon} ${r.name}`;
                 btn.onclick = () => {
                     if (!containerId.includes('escala') && !containerId.includes('admin') && !containerId.includes('history')) {
@@ -1395,19 +1412,25 @@
         function selectRoomChamada(key) {
         selectedRoomKeyChamada = key;
         const grid = document.getElementById('kidsList'); grid.innerHTML = '';
-        const kids = kidsData[key] || [];
+
+        // Sala combinada (ex.: "Gama + Ômega"): junta os alunos das salas reais
+        // que ela representa, mas cada um continua marcado com sua sala de
+        // verdade (kid._realRoomKey) para a pontuação ir para o lugar certo.
+        const memberRooms = COMBINED_ROOM_MEMBERS[key] || [key];
+        const kids = memberRooms.flatMap(rk => (kidsData[rk] || []).map(k => ({ ...k, _realRoomKey: rk })));
+
         if(kids.length === 0) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center">Sem alunos cadastrados</div>'; return; }
 
         kids.forEach(kid => {
-            const div = document.createElement('div'); div.className = 'kid-card'; div.dataset.name = kid.name;
-            
-            div.onclick = function() { 
-                this.classList.toggle('present'); 
+            const div = document.createElement('div'); div.className = 'kid-card'; div.dataset.name = kid.name; div.dataset.room = kid._realRoomKey;
+
+            div.onclick = function() {
+                this.classList.toggle('present');
                 // Se tirar a presença, tira a atividade também
                 if (!this.classList.contains('present')) this.classList.remove('atividade');
-                checkCallFormValidity(); 
+                checkCallFormValidity();
             };
-            
+
             const imgSrc = (kid.photo.startsWith('http') || kid.photo.startsWith('data:')) ? kid.photo : `img/${kid.photo}`;
             div.innerHTML = `
                 <img src="${imgSrc}" class="kid-img" onerror="this.src='https://ui-avatars.com/api/?name=${kid.name}&background=random'">
@@ -1436,7 +1459,7 @@
             const name = document.getElementById('extraKidName').value;
             if(!name) return;
             const grid = document.getElementById('kidsList');
-            const div = document.createElement('div'); div.className = 'kid-card present'; div.dataset.name = name + " (Visitante)";
+            const div = document.createElement('div'); div.className = 'kid-card present'; div.dataset.name = name + " (Visitante)"; div.dataset.room = selectedRoomKeyChamada;
             div.innerHTML = `<div class="kid-img" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:#fef3c7;color:#d97706;">✨</div><div class="kid-name">${name}<br><small>(Extra)</small></div>`;
             div.onclick = function() { if(confirm('Remover visitante?')) this.remove(); checkCallFormValidity(); };
             grid.appendChild(div); document.getElementById('extraKidName').value = ''; checkCallFormValidity();
@@ -1465,14 +1488,12 @@
         
         async function submitCall() {
         const btn = document.getElementById('btn-submit-chamada');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; 
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
         btn.disabled = true;
-        
-        const room = roomsData[selectedRoomKeyChamada];
-        const presentNodes = document.querySelectorAll('.kid-card.present');
-        const presentNames = Array.from(presentNodes).map(el => el.dataset.name);
+
+        const presentNodes = Array.from(document.querySelectorAll('.kid-card.present'));
         const dateVal = document.getElementById('dateInput').value;
-        
+
         // Formata a data (DD-MM-YYYY) para sincronizar com o app das famílias
         const [y, m, d] = dateVal.split('-');
         const safeDate = `${d}-${m}-${y}`;
@@ -1480,76 +1501,93 @@
         const teacherVal = document.getElementById('teacherName').value;
         const dateFormatted = formatDateFromInput(dateVal);
 
-        const chamadaData = {
-            room_name: room.name, room_key: selectedRoomKeyChamada,
-            lesson_date: dateFormatted, teacher_name: teacherVal,
-            kids_list: presentNames.join('; '), timestamp: firebase.database.ServerValue.TIMESTAMP
-        };
+        // Numa sala combinada (ex.: "Gama + Ômega"), cada aluno carrega a sua
+        // sala real (dataset.room). Agrupamos por sala real para que a chamada
+        // e a pontuação de cada criança sejam salvas exatamente como sempre
+        // foram (mesmo formato usado pelo familia-em-campo.html).
+        const groups = {};
+        presentNodes.forEach(node => {
+            const realRoomKey = node.dataset.room || selectedRoomKeyChamada;
+            if (!groups[realRoomKey]) groups[realRoomKey] = [];
+            groups[realRoomKey].push(node);
+        });
 
-        try { 
-            // 1. Salva a chamada no histórico
-            await db.ref('chamadas').push(chamadaData);
+        try {
+            for (const realRoomKey of Object.keys(groups)) {
+                const nodesOfRoom = groups[realRoomKey];
+                const presentNames = nodesOfRoom.map(el => el.dataset.name);
+                const room = roomsData[realRoomKey] || professorRoomsData[realRoomKey];
 
-            // 2. INTEGRAÇÃO IMERSÃO: Ponto exclusivo de "Presença do Aluno"
-            const roomKids = kidsData[selectedRoomKeyChamada] || [];
-            
-            presentNodes.forEach(node => {
-                const kidNameRaw = node.dataset.name;
-                const isAtividade = node.classList.contains('atividade'); // Checa se entregou atividade
-                const kidIndex = roomKids.findIndex(k => k.name === kidNameRaw);
-                
-                if (kidIndex !== -1) {
-                    const safeName = kidNameRaw.replace(/[.#$[\]]/g, '');
-                    const kidId = `${selectedRoomKeyChamada}_${safeName}`;
-                    
-                    const historyRef = db.ref(`imersao_biblica_scores/${kidId}/history/${safeDate}`);
+                const chamadaData = {
+                    room_name: room ? room.name : realRoomKey, room_key: realRoomKey,
+                    lesson_date: dateFormatted, teacher_name: teacherVal,
+                    kids_list: presentNames.join('; '), timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
 
-                    historyRef.once('value', snapshot => {
-                        let diaData = snapshot.val() || { ebd: false, culto: false, presenca_prof: 0, atividade_prof: 0, pts: 0 };
-                        
-                        let pontosGanhosAgora = 1; // +1 Ponto de Presença
-                        diaData.presenca_prof = (diaData.presenca_prof || 0) + 1;
-                        
-                        if (isAtividade) {
-                            diaData.atividade_prof = (diaData.atividade_prof || 0) + 1;
-                            pontosGanhosAgora += 1; // +1 Ponto de Atividade
-                        }
-                        
-                        // Recalcula o total do dia somando Pais + Professor
-                        let ptsPais = (diaData.ebd ? 1 : 0) + (diaData.culto ? 1 : 0);
-                        diaData.pts = ptsPais + diaData.presenca_prof + (diaData.atividade_prof || 0);
+                // 1. Salva a chamada no histórico
+                await db.ref('chamadas').push(chamadaData);
 
-                        historyRef.update(diaData);
+                // 2. INTEGRAÇÃO IMERSÃO: Ponto exclusivo de "Presença do Aluno"
+                const roomKids = kidsData[realRoomKey] || [];
 
-                        // Atualiza a barra de progresso (Total) corretamente
-                        const totalRef = db.ref(`imersao_biblica_scores/${kidId}/total`);
-                        totalRef.once('value', totSnap => {
-                            let total = totSnap.val() || 0;
-                            totalRef.set(total + pontosGanhosAgora);
+                nodesOfRoom.forEach(node => {
+                    const kidNameRaw = node.dataset.name;
+                    const isAtividade = node.classList.contains('atividade'); // Checa se entregou atividade
+                    const kidIndex = roomKids.findIndex(k => k.name === kidNameRaw);
+
+                    if (kidIndex !== -1) {
+                        const safeName = kidNameRaw.replace(/[.#$[\]]/g, '');
+                        const kidId = `${realRoomKey}_${safeName}`;
+
+                        const historyRef = db.ref(`imersao_biblica_scores/${kidId}/history/${safeDate}`);
+
+                        historyRef.once('value', snapshot => {
+                            let diaData = snapshot.val() || { ebd: false, culto: false, presenca_prof: 0, atividade_prof: 0, pts: 0 };
+
+                            let pontosGanhosAgora = 1; // +1 Ponto de Presença
+                            diaData.presenca_prof = (diaData.presenca_prof || 0) + 1;
+
+                            if (isAtividade) {
+                                diaData.atividade_prof = (diaData.atividade_prof || 0) + 1;
+                                pontosGanhosAgora += 1; // +1 Ponto de Atividade
+                            }
+
+                            // Recalcula o total do dia somando Pais + Professor
+                            let ptsPais = (diaData.ebd ? 1 : 0) + (diaData.culto ? 1 : 0);
+                            diaData.pts = ptsPais + diaData.presenca_prof + (diaData.atividade_prof || 0);
+
+                            historyRef.update(diaData);
+
+                            // Atualiza a barra de progresso (Total) corretamente
+                            const totalRef = db.ref(`imersao_biblica_scores/${kidId}/total`);
+                            totalRef.once('value', totSnap => {
+                                let total = totSnap.val() || 0;
+                                totalRef.set(total + pontosGanhosAgora);
+                            });
                         });
-                    });
-                }
-            });
+                    }
+                });
+            }
 
             // Troque o alert de sucesso por este:
-            showToast('Chamada enviada e pontos de presença somados!'); 
+            showToast('Chamada enviada e pontos de presença somados!');
 
-            document.querySelectorAll('.kid-card').forEach(c => c.classList.remove('present')); 
-            document.getElementById('teacherName').value = ''; 
-            
+            document.querySelectorAll('.kid-card').forEach(c => c.classList.remove('present'));
+            document.getElementById('teacherName').value = '';
+
             let extraKid = document.getElementById('extraKidName');
             if (extraKid) {
                 extraKid.value = '';
             }
-            
+
             checkCallFormValidity();
-        } catch(e) { 
+        } catch(e) {
             // Troque o alert de erro por este:
-            showToast("Erro ao enviar chamada.", "error"); 
+            showToast("Erro ao enviar chamada.", "error");
             console.error(e);
         }
-        
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Chamada'; 
+
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Chamada';
         btn.disabled = false;
     }
 
@@ -1845,7 +1883,7 @@
         }
 
         function openNewScheduleModal() { document.getElementById('modalFormTitle').innerText = "➕ Criar Nova Escala"; document.getElementById('formMode').value = "create"; document.getElementById('modalRoomSelect').value = ""; document.getElementById('modalRoomSelect').disabled = false; document.getElementById('modalDate').value = ""; document.getElementById('modalLesson').value = ""; document.getElementById('teacherSelectionList').innerHTML = '<div style="padding:15px; text-align:center; color:#aaa;">Selecione uma sala primeiro.</div>'; document.getElementById('scheduleFormModal').classList.add('active'); }
-        function openEditScheduleModal(roomKey, index) { document.getElementById('modalFormTitle').innerText = "✏️ Trocar / Editar Escala"; document.getElementById('formMode').value = "edit"; const item = scheduleData[roomKey].schedules[index]; document.getElementById('modalRoomSelect').value = roomKey; document.getElementById('modalRoomSelect').disabled = true; document.getElementById('editRoomKey').value = roomKey; document.getElementById('editIndex').value = index; document.getElementById('modalDate').value = formatDateToInput(item.date); document.getElementById('modalLesson').value = item.lesson; renderTeacherSelectionList(item.teachers, roomsData[roomKey].name); document.getElementById('scheduleFormModal').classList.add('active'); }
+        function openEditScheduleModal(roomKey, index) { document.getElementById('modalFormTitle').innerText = "✏️ Trocar / Editar Escala"; document.getElementById('formMode').value = "edit"; const item = scheduleData[roomKey].schedules[index]; document.getElementById('modalRoomSelect').value = roomKey; document.getElementById('modalRoomSelect').disabled = true; document.getElementById('editRoomKey').value = roomKey; document.getElementById('editIndex').value = index; document.getElementById('modalDate').value = formatDateToInput(item.date); document.getElementById('modalLesson').value = item.lesson; renderTeacherSelectionList(item.teachers, professorRoomsData[roomKey].name); document.getElementById('scheduleFormModal').classList.add('active'); }
         function closeScheduleFormModal() { document.getElementById('scheduleFormModal').classList.remove('active'); }
 
         // Nova função para descobrir quem já trabalha neste dia
@@ -1879,7 +1917,7 @@
                 currentSelected = Array.from(checkedNodes).map(cb => cb.value);
             }
             
-            renderTeacherSelectionList(currentSelected, roomsData[roomKey].name); 
+            renderTeacherSelectionList(currentSelected, professorRoomsData[roomKey].name);
         }
 
         // Verifica se um professor pertence a uma turma, entendendo múltiplas turmas
@@ -1888,11 +1926,12 @@
         function teacherBelongsToRoom(teacher, roomName) {
             if (!teacher || !teacher.room || !roomName) return false;
             const tokens = teacher.room.split(',').map(r => r.trim());
-            if (tokens.includes(roomName.trim())) return true;
-            // Compatibilidade: um teste de unificação de salas (desfeito) pode ter
-            // gravado "Gama + Ômega" no cadastro de alguns professores no Firebase.
-            // Trata isso como pertencendo às duas salas, para não sumir da lista.
-            if ((roomName.trim() === "Gama" || roomName.trim() === "Ômega") && tokens.includes("Gama + Ômega")) {
+            const target = roomName.trim();
+            if (tokens.includes(target)) return true;
+            // Professores de Gama e Ômega são tratados como uma turma só.
+            // Um professor marcado como só "Gama" ou só "Ômega" (cadastro antigo)
+            // também conta como pertencendo à turma combinada "Gama + Ômega".
+            if (target === "Gama + Ômega" && tokens.some(t => t === "Gama" || t === "Ômega")) {
                 return true;
             }
             return false;
@@ -1954,7 +1993,7 @@
         function setHistoryType(type, btn) { selectedHistoryType = type; togglePill(btn); renderHistory(); }
         function renderHistory() {
             const container = document.getElementById('historyGrid'); container.innerHTML = ''; let allSchedules = [];
-            Object.keys(scheduleData).forEach(key => { scheduleData[key].schedules.forEach(s => { allSchedules.push({ ...s, roomName: roomsData[key].name, roomKey: key }); }); });
+            Object.keys(scheduleData).forEach(key => { scheduleData[key].schedules.forEach(s => { allSchedules.push({ ...s, roomName: professorRoomsData[key].name, roomKey: key }); }); });
             allSchedules.sort((a,b) => b.date.split('/').reverse().join('').localeCompare(a.date.split('/').reverse().join('')));
             allSchedules.forEach(item => {
                 const [d, m, y] = item.date.split('/');
@@ -2061,7 +2100,7 @@
             } else {
                 fixedTeachersData.forEach(t => {
                     if (search && !t.name.toLowerCase().includes(search)) return; 
-                    if (selectedAdminTeacherRoom && !teacherBelongsToRoom(t, roomsData[selectedAdminTeacherRoom].name)) return;
+                    if (selectedAdminTeacherRoom && !teacherBelongsToRoom(t, professorRoomsData[selectedAdminTeacherRoom].name)) return;
                     
                     let phoneInfo = t.phone ? `<p><i class="fas fa-phone-alt" style="color:var(--text-muted);"></i> ${t.phone}</p>` : '';
                     let dobInfo = t.dob ? `<p><i class="fas fa-birthday-cake" style="color:var(--secondary);"></i> Niver: ${t.dob}</p>` : '';
@@ -2135,19 +2174,22 @@
                 if (!existingData) { alert("Erro ao carregar dados de " + name); return; }
 
                 // Gerar Checkboxes de Turmas
+                // Alunos escolhem entre as salas reais (Gama e Ômega separadas).
+                // Professores escolhem entre as salas de escala (Gama + Ômega juntas).
+                const roomsSourceForEdit = (type === 'aluno') ? roomsData : professorRoomsData;
                 const roomsListContainer = document.getElementById('editPersonRoomsList');
                 roomsListContainer.innerHTML = '';
-                Object.keys(roomsData).forEach(rk => {
-                    let isChecked = (currentRooms.includes(rk) || currentRooms.includes(roomsData[rk].name)) ? 'checked' : '';
-                    // Compatibilidade: pré-marca Gama e Ômega para quem ainda estiver
-                    // com "Gama + Ômega" gravado (teste de unificação desfeito)
-                    if (!isChecked && (rk === 'gama' || rk === 'ômega') && currentRooms.includes('Gama + Ômega')) {
+                Object.keys(roomsSourceForEdit).forEach(rk => {
+                    let isChecked = (currentRooms.includes(rk) || currentRooms.includes(roomsSourceForEdit[rk].name)) ? 'checked' : '';
+                    // Compatibilidade: pré-marca "Gama + Ômega" para professores que
+                    // ainda estejam com "Gama" ou "Ômega" separado no cadastro antigo
+                    if (!isChecked && type === 'professor' && rk === 'gama_omega' && (currentRooms.includes('Gama') || currentRooms.includes('Ômega'))) {
                         isChecked = 'checked';
                     }
                     roomsListContainer.innerHTML += `
                         <label style="display:flex; align-items:center; gap:5px; background:#f3f4f6; padding:5px 10px; border-radius:8px; font-size:0.85rem; cursor:pointer;">
                             <input type="checkbox" class="edit-room-checkbox" value="${rk}" ${isChecked} style="width:auto; padding:0; margin:0;">
-                            ${roomsData[rk].name}
+                            ${roomsSourceForEdit[rk].name}
                         </label>
                     `;
                 });
@@ -2203,7 +2245,7 @@
 
             const payload = { name: newName, dob, phone, isNew: true };
             if (type === 'aluno') payload.guardian = guardian;
-            if (type === 'professor') payload.room = selectedRooms.map(rk => roomsData[rk].name).join(', ');
+            if (type === 'professor') payload.room = selectedRooms.map(rk => professorRoomsData[rk].name).join(', ');
 
             const btnOriginalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
