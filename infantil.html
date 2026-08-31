@@ -399,7 +399,9 @@
             <div id="chamadaHistoryContainer" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
             </div>
         </div>
-    </div> <div id="editPersonModal" class="modal-overlay"> <div class="modal-content" style="max-width: 400px; width: 95%;">
+    </div> 
+    <div id="editPersonModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; width: 95%;">
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="margin: 0; color: var(--primary);"><i class="fas fa-edit"></i> Editar Dados</h3>
@@ -429,6 +431,16 @@
                 <label style="font-size: 0.8rem; font-weight: 700;"><i class="fas fa-camera"></i> Atualizar Foto (Firebase)</label>
                 <input type="file" id="editPersonPhotoInput" accept="image/*" class="form-input" style="padding: 8px; background: white; border: 2px dashed var(--primary);">
             </div>
+
+            <!-- NOVO CAMPO: SELEÇÃO DE TURMAS -->
+            <div class="form-group">
+                <label style="font-size: 0.8rem; font-weight: 700;"><i class="fas fa-shapes"></i> Turma(s)</label>
+                <div id="editPersonRoomsList" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px;">
+                    <!-- Preenchido via JS -->
+                </div>
+                <small style="color:var(--text-muted); font-size:0.75rem;">Marque uma ou mais turmas.</small>
+            </div>
+
             <div id="editPersonStudentFields" style="display:none;">
                 <div class="form-group">
                     <label style="font-size: 0.8rem; font-weight: 700;">Nome do Responsável</label>
@@ -442,7 +454,6 @@
                 <button class="btn btn-success" style="flex: 1;" onclick="savePersonEdit()"><i class="fas fa-save"></i> Salvar</button>
             </div>
         </div>
-    </div>
     </div>
 
     <nav class="sidebar" id="sidebar">
@@ -2020,41 +2031,60 @@
             }
         }
 
-        // Funções do Modal de Edição (Somente Admin)
+
         // ==========================================
-        // FUNÇÕES DE EDIÇÃO E EXCLUSÃO (CORRIGIDAS)
+        // FUNÇÕES DE EDIÇÃO E EXCLUSÃO ATUALIZADAS
         // ==========================================
         function openEditPersonModal(type, room, name) {
             try {
                 if(!isAdminMode) { openPasswordModal(); return; }
                 
                 document.getElementById('editPersonType').value = type;
-                document.getElementById('editPersonRoom').value = room;
                 document.getElementById('editPersonOriginalName').value = name;
                 
-                // Preenche o nome no campo para edição
                 const nameInput = document.getElementById('editPersonNameInput');
                 if (nameInput) nameInput.value = name;
 
-                // Mostra/esconde os campos de aluno (responsável)
                 const studentFields = document.getElementById('editPersonStudentFields');
                 if (studentFields) studentFields.style.display = (type === 'aluno') ? 'block' : 'none';
 
-                // Busca os dados atuais da pessoa
                 let existingData = null;
-                if(type === 'aluno') {
-                    existingData = kidsData[room].find(k => k.name === name);
+                let currentRooms = [];
+
+                // Identificar em quais turmas a pessoa está atualmente
+                if (type === 'aluno') {
+                    Object.keys(kidsData).forEach(rk => {
+                        const found = kidsData[rk].find(k => k.name === name);
+                        if (found) {
+                            if (!existingData) existingData = found;
+                            currentRooms.push(rk);
+                        }
+                    });
                 } else {
                     existingData = fixedTeachersData.find(t => t.name === name);
+                    if (existingData && existingData.room) {
+                        currentRooms = existingData.room.split(',').map(r => r.trim());
+                    }
                 }
 
-                // Proteção contra travamento se não achar os dados
-                if (!existingData) {
-                    alert("Erro interno: Não foi possível carregar os dados de " + name);
-                    return;
-                }
+                if (!existingData) { alert("Erro ao carregar dados de " + name); return; }
 
-                // Ajusta a data de nascimento
+                // Gerar Checkboxes de Turmas
+                const roomsListContainer = document.getElementById('editPersonRoomsList');
+                roomsListContainer.innerHTML = '';
+                Object.keys(roomsData).forEach(rk => {
+                    const isChecked = (currentRooms.includes(rk) || currentRooms.includes(roomsData[rk].name)) ? 'checked' : '';
+                    roomsListContainer.innerHTML += `
+                        <label style="display:flex; align-items:center; gap:5px; background:#f3f4f6; padding:5px 10px; border-radius:8px; font-size:0.85rem; cursor:pointer;">
+                            <input type="checkbox" class="edit-room-checkbox" value="${rk}" ${isChecked} style="width:auto; padding:0; margin:0;">
+                            ${roomsData[rk].name}
+                        </label>
+                    `;
+                });
+
+                // Salva as salas originais para poder remover o aluno caso ele seja desmarcado depois
+                document.getElementById('editPersonRoom').value = currentRooms.join(',');
+
                 let dobValue = existingData.dob || '';
                 if(dobValue.includes('/')) {
                     const p = dobValue.split('/');
@@ -2063,30 +2093,28 @@
 
                 document.getElementById('editPersonDob').value = dobValue;
                 document.getElementById('editPersonPhone').value = existingData.phone || '';
-                
-                if(type === 'aluno') {
-                    document.getElementById('editPersonGuardian').value = existingData.guardian || '';
-                }
+                if(type === 'aluno') document.getElementById('editPersonGuardian').value = existingData.guardian || '';
 
-                // Abre a janela
                 document.getElementById('editPersonModal').classList.add('active');
             } catch (erro) {
-                alert("Travou ao tentar abrir a edição! Erro: " + erro.message);
+                alert("Erro ao abrir edição: " + erro.message);
                 console.error(erro);
             }
         }
 
+        // FUNÇÃO QUE ESTAVA FALTANDO PARA FECHAR O MODAL
         function closeEditPersonModal() {
             document.getElementById('editPersonModal').classList.remove('active');
         }
 
-        // Função de salvar atualizada e à prova de bugs
         async function savePersonEdit() {
+            const btn = document.querySelector('#editPersonModal .btn-success');
+            if (btn.disabled) return; // Evita duplo clique e loop
+
             const type = document.getElementById('editPersonType').value;
-            const room = document.getElementById('editPersonRoom').value;
+            const originalRooms = document.getElementById('editPersonRoom').value.split(',').filter(r => r); 
             const originalName = document.getElementById('editPersonOriginalName').value;
             const newName = document.getElementById('editPersonNameInput').value.trim();
-            
             const dob = document.getElementById('editPersonDob').value;
             const phone = document.getElementById('editPersonPhone').value;
             const guardian = document.getElementById('editPersonGuardian').value;
@@ -2094,17 +2122,19 @@
 
             if (!newName) return alert("O nome não pode ficar vazio!");
 
+            // Capturar todas as turmas marcadas
+            const selectedCheckboxes = document.querySelectorAll('.edit-room-checkbox:checked');
+            const selectedRooms = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+            if (selectedRooms.length === 0) return alert("Selecione pelo menos uma turma!");
+
             const safeOriginalName = originalName.replace(/[.#$[\]]/g, ''); 
             const safeNewName = newName.replace(/[.#$[\]]/g, ''); 
 
-            const oldNodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeOriginalName}` : `dados_extras/professores/${safeOriginalName}`;
-            const newNodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeNewName}` : `dados_extras/professores/${safeNewName}`;
-
-            // NOVO: O isNew: true garante que o sistema sempre leia a foto mesmo após alterar nome!
             const payload = { name: newName, dob, phone, isNew: true };
-            if(type === 'aluno') payload.guardian = guardian;
+            if (type === 'aluno') payload.guardian = guardian;
+            if (type === 'professor') payload.room = selectedRooms.map(rk => roomsData[rk].name).join(', ');
 
-            const btn = document.querySelector('#editPersonModal .btn-success');
             const btnOriginalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
             btn.disabled = true;
@@ -2112,24 +2142,37 @@
             try {
                 if (fileInput && fileInput.files.length > 0) {
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subindo Foto...';
-                    const file = fileInput.files[0];
-                    payload.photo = await comprimirFotoParaBase64(file);
+                    payload.photo = await comprimirFotoParaBase64(fileInput.files[0]);
                 }
 
-                if (safeNewName !== safeOriginalName) {
-                    await db.ref(newNodePath).update(payload);
-                    await db.ref(oldNodePath).update({ deleted: true });
+                if (type === 'aluno') {
+                    // Remover o aluno de salas desmarcadas ou antigas
+                    for (const oldRoom of originalRooms) {
+                        if (!selectedRooms.includes(oldRoom) || safeNewName !== safeOriginalName) {
+                            await db.ref(`dados_extras/alunos/${oldRoom}/${safeOriginalName}`).update({ deleted: true });
+                        }
+                    }
+                    // Inserir nas salas atuais
+                    for (const newRoom of selectedRooms) {
+                        await db.ref(`dados_extras/alunos/${newRoom}/${safeNewName}`).update(payload);
+                    }
                 } else {
-                    await db.ref(oldNodePath).update(payload);
+                    const oldNodePath = `dados_extras/professores/${safeOriginalName}`;
+                    const newNodePath = `dados_extras/professores/${safeNewName}`;
+
+                    if (safeNewName !== safeOriginalName) {
+                        await db.ref(newNodePath).update(payload);
+                        await db.ref(oldNodePath).update({ deleted: true });
+                    } else {
+                        await db.ref(oldNodePath).update(payload);
+                    }
                 }
 
                 closeEditPersonModal();
-                showToast("Dados e foto salvos com sucesso!");
-                
+                showToast("Dados, foto e turmas atualizados!");
                 if(fileInput) fileInput.value = ''; 
 
             } catch (e) {
-                // NOVO: Mostra o erro na tela se a imagem der pau
                 alert("Erro ao salvar: " + e.message);
             } finally {
                 btn.innerHTML = btnOriginalText;
@@ -2139,20 +2182,28 @@
 
         function deletePerson() {
             const type = document.getElementById('editPersonType').value;
-            const room = document.getElementById('editPersonRoom').value;
+            const roomsString = document.getElementById('editPersonRoom').value;
             const name = document.getElementById('editPersonOriginalName').value;
             
             if(!confirm(`⚠️ Tem certeza que deseja APAGAR ${name} do sistema?\nIsso não pode ser desfeito.`)) return;
 
             const safeName = name.replace(/[.#$[\]]/g, ''); 
-            const nodePath = type === 'aluno' ? `dados_extras/alunos/${room}/${safeName}` : `dados_extras/professores/${safeName}`;
-
-            db.ref(nodePath).update({ deleted: true }).then(() => {
+            
+            if (type === 'aluno') {
+                const rooms = roomsString.split(',').filter(r => r);
+                rooms.forEach(room => {
+                    db.ref(`dados_extras/alunos/${room}/${safeName}`).update({ deleted: true });
+                });
                 closeEditPersonModal();
                 alert("🗑️ Registro apagado com sucesso!");
-            }).catch(e => alert("Erro ao apagar: " + e.message));
+            } else {
+                db.ref(`dados_extras/professores/${safeName}`).update({ deleted: true }).then(() => {
+                    closeEditPersonModal();
+                    alert("🗑️ Registro apagado com sucesso!");
+                }).catch(e => alert("Erro ao apagar: " + e.message));
+            }
         }
-        // Função mágica que diminui a foto e transforma em texto (Base64)
+        // Função mágica que diminui a foto e transforma em texto (Base64) 
         // Função mágica que diminui a foto e transforma em texto (Base64) - AGORA COM PROTEÇÃO CONTRA ERROS
         function comprimirFotoParaBase64(file) {
             return new Promise((resolve, reject) => {
