@@ -967,7 +967,7 @@
                 Object.keys(extras.alunos).forEach(roomKey => {
                     // Chave legada de um teste de unificação de salas desfeito:
                     // não é uma sala real, é tratada à parte logo abaixo.
-                    if (LEGACY_MERGED_ROOM_KEYS.includes(roomKey)) return;
+                    if (LEGACY_MERGED_ALUNOS_ROOM_KEYS.includes(roomKey)) return;
                     if(!kidsData[roomKey]) kidsData[roomKey] = [];
 
                     Object.keys(extras.alunos[roomKey]).forEach(safeName => {
@@ -1007,7 +1007,7 @@
                 // "gama_omega" (de um teste de unificação desfeito) são aplicados
                 // em Gama e/ou Ômega — apenas na sala que já tinha aquele aluno
                 // pelo nome, sem apagar nada às cegas.
-                LEGACY_MERGED_ROOM_KEYS.forEach(legacyKey => {
+                LEGACY_MERGED_ALUNOS_ROOM_KEYS.forEach(legacyKey => {
                     if (!extras.alunos[legacyKey]) return;
                     Object.keys(extras.alunos[legacyKey]).forEach(safeName => {
                         const data = extras.alunos[legacyKey][safeName];
