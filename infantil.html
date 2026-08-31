@@ -667,8 +667,7 @@
                         <option value="Berçário">Berçário</option>
                         <option value="Alfa">Alfa</option>
                         <option value="Beta">Beta</option>
-                        <option value="Gama">Gama</option>
-                        <option value="Ômega">Ômega</option>
+                        <option value="Gama + Ômega">Gama + Ômega</option>
                     </select>
                 </div>
             </div>
@@ -686,12 +685,11 @@
                         <option value="Berçário">Berçário</option>
                         <option value="Alfa">Alfa</option>
                         <option value="Beta">Beta</option>
-                        <option value="Gama">Gama</option>
-                        <option value="Ômega">Ômega</option>
+                        <option value="Gama + Ômega">Gama + Ômega</option>
                     </select>
                 </div>
             </div>
-                <div id="teacherFields" class="hidden"><div class="form-group"><label>WhatsApp Professor</label><input type="tel" id="regTeacherPhone" placeholder="DDD+Número"></div><div class="form-group"><label>Sala Preferencial</label><select id="regTeacherRoom"><option value="">(Opcional) Selecione a Turma</option><option value="Berçário">Berçário</option><option value="Alfa">Alfa</option><option value="Beta">Beta</option><option value="Gama">Gama</option><option value="Ômega">Ômega</option></select></div></div>
+                <div id="teacherFields" class="hidden"><div class="form-group"><label>WhatsApp Professor</label><input type="tel" id="regTeacherPhone" placeholder="DDD+Número"></div><div class="form-group"><label>Sala Preferencial</label><select id="regTeacherRoom"><option value="">(Opcional) Selecione a Turma</option><option value="Berçário">Berçário</option><option value="Alfa">Alfa</option><option value="Beta">Beta</option><option value="Gama + Ômega">Gama + Ômega</option></select></div></div>
                 <div style="display:flex; gap:10px;"><button class="btn btn-danger" onclick="toggleNewForm()">Cancelar</button><button class="btn btn-success" onclick="submitRegistration()">Salvar</button></div>
             </div>
             <div id="adminListContainer" class="people-grid"></div>
@@ -750,9 +748,14 @@
             berçario: { name: "Berçário", age: "0-2 anos", icon: "👶", color: "#6C63FF" },
             alfa: { name: "Alfa", age: "3-4 anos", icon: "🧸", color: "#FF6584" },
             beta: { name: "Beta", age: "5-6 anos", icon: "🎨", color: "#4299E1" },
-            gama: { name: "Gama", age: "7-8 anos", icon: "⚽", color: "#48BB78" },
-            ômega: { name: "Ômega", age: "9-11 anos", icon: "📚", color: "#ED8936" }
+            gama_omega: { name: "Gama + Ômega", age: "7-11 anos", icon: "⚽", color: "#48BB78" }
         };
+
+        // Salas antigas que foram unidas na sala "Gama + Ômega".
+        // Usado para redirecionar dados já salvos no Firebase (escalas/alunos)
+        // que ainda estejam gravados com as chaves antigas.
+        const ROOM_ALIASES = { gama: 'gama_omega', 'ômega': 'gama_omega', omega: 'gama_omega' };
+        function resolveRoomKey(key) { return ROOM_ALIASES[key] || key; }
 
         const kidsData = {
             berçario: [ 
@@ -804,7 +807,7 @@
                 { id: 39, name: "Ana Luiza", photo: "ana_luiza_beta.png", dob: "", guardian: "", phone: "" },
                 { id: 40, name: "Liz Couto", photo: "liz_couto_beta.png", dob: "", guardian: "", phone: "" }
             ],
-            gama: [ 
+            gama_omega: [
                 { id: 39, name: "Isaac", photo: "isaac_gama.png", dob: "2023-05-20", guardian: "alex santana", phone: "27999456858" },
                 { id: 40, name: "Davi", photo: "davi_gama.png", dob: "", guardian: "", phone: "" },
                 { id: 41, name: "Sophia", photo: "sophia_gama.png", dob: "", guardian: "", phone: "" },
@@ -812,9 +815,8 @@
                 { id: 45, name: "Brayan", photo: "brayan_gama.png" }, { id: 48, name: "Emanuelly", photo: "emanuelly_gama.png" }, { id: 49, name: "Kauã", photo: "kaua_gama.png" },
                 { id: 50, name: "Vicente", photo: "vicente_gama.png" }, { id: 51, name: "Elisa Romão", photo: "elisa_romao_gama.png" }, { id: 52, name: "Helena Miranda", photo: "helena_gama.png" },
                 { id: 53, name: "Ana Clara", photo: "ana_clara_gama.png" }, { id: 54, name: "Érick", photo: "erick_gama.png" }, { id: 55, name: "Lorenzo", photo: "lorenzo_gama.png" },
-                { id: 56, name: "Theo", photo: "theo_gama.png" }, { id: 57, name: "Brunelly", photo: "Brunelly_gama.png" }, { id: 58, name: "Vitor", photo: "Vitor_gama.png" }, { id: 59, name: "João Pedro Barros", photo: "joao_pedro_gama.png" }
-            ],
-            ômega: [ 
+                { id: 56, name: "Theo", photo: "theo_gama.png" }, { id: 57, name: "Brunelly", photo: "Brunelly_gama.png" }, { id: 58, name: "Vitor", photo: "Vitor_gama.png" }, { id: 59, name: "João Pedro Barros", photo: "joao_pedro_gama.png" },
+                // --- Alunos que vieram da antiga sala Ômega ---
                 { id: 56, name: "Nicolly", photo: "nicolly_omega.png" }, { id: 57, name: "Saulo", photo: "saulo_omega.png" }, { id: 58, name: "Kemily", photo: "kemily_omega.png" },
                 { id: 59, name: "Maria Eduarda", photo: "maria_eduarda_omega.png" }, { id: 60, name: "Lorena", photo: "lorena_omega.png" }, { id: 61, name: "Laura", photo: "laura_omega.png" },
                 { id: 62, name: "Eduardo", photo: "eduardo_omega.png" }, { id: 63, name: "Kauã", photo: "kaua_omega.png" }, { id: 64, name: "Pedro Lucas", photo: "pedro_lucas_omega.png" },
@@ -873,22 +875,22 @@
             { name: "Ana Paula Nogueira Tongo", photo: "ana_paula.png", room: "Beta", dob: "01/10", phone: "27988017044" },
             { name: "Marcia Reis ", photo: "marcia.png", room: "Beta", dob: "06/09", phone: "27998741710" },
             { name: "Sophia Almeida de gois", photo: "sophiap.png", room: "Beta", dob: "29/10", phone: "27998270304"},
-            { name: "Arthur dos santos da Conceição  ", photo: "arthur_gamap1.png", room: "Gama", dob: "26/04", phone: "27996412271" },
-            { name: "Ana Beatriz Rodrigues de Souza", photo: "ana_beatriz.png", room: "Gama", dob: "19/05", phone: "27992236469" },
-            { name: "Ramon de Oliveira Correa", photo: "ramon.png", room: "Gama", dob: "11/07", phone: "27997009106" },
-            { name: "Ana Clara Silva Petersen", photo: "ana_clara.png", room: "Gama", dob: "30/08", phone: "27998209839" },
-            { name: "Lucas de Souza Fernandes", photo: "lucas.png", room: "Gama", dob: "05/01", phone: "27995054635" },
-            { name: "Libhya da Silva Souza Gonçalves Victorino", photo: "libhya.png", room: "Gama", dob: "12/08", phone: "27999733457" },
-            { name: "Alex Gonçalves Victorino", photo: "alex.png", room: "Gama", dob: "20/11", phone: "27999064068" },
-            { name: "Mikaeli Manoel Jacinto Furriel Gonçalves", photo: "mikaeli.png", room: "Gama", dob: "19/01", phone: "27999567965" },
-            { name: "Jackson Jadyvysky", photo: "jackson.png", room: "Ômega", dob: "06/06", phone: "27999575703" },
-            { name: "Luiz Felipe Oliveira dos Santos", photo: "luiz.png", room: "Ômega", dob: "19/11", phone: "27995262281" },
-            { name: "Diego Pimenta", photo: "diego.png", room: "Ômega", dob: "21/05", phone: "27992978778" },
-            { name: "Raiara da Conceição Viana Pimenta", photo: "raiara.png", room: "Ômega", dob: "17/08", phone: "27992896345" },
-            { name: "Brenda Rodrigues de Souza", photo: "brenda.png", room: "Ômega", dob: "20/07", phone: "27992819832" },
-            { name: "JOICE", photo: "joice.png", room: "Ômega", dob: "", phone: "27995215321" },
-            { name: "Brunara dos Santos Alves", photo: "brunara.png", room: "Ômega", dob: "25/04", phone: "27995067124" },
-            { name: "Kauã Guimarães Stein ", photo: "kauan.png", room: "Ômega", dob: "23/12", phone: "27998391140" }
+            { name: "Arthur dos santos da Conceição  ", photo: "arthur_gamap1.png", room: "Gama + Ômega", dob: "26/04", phone: "27996412271" },
+            { name: "Ana Beatriz Rodrigues de Souza", photo: "ana_beatriz.png", room: "Gama + Ômega", dob: "19/05", phone: "27992236469" },
+            { name: "Ramon de Oliveira Correa", photo: "ramon.png", room: "Gama + Ômega", dob: "11/07", phone: "27997009106" },
+            { name: "Ana Clara Silva Petersen", photo: "ana_clara.png", room: "Gama + Ômega", dob: "30/08", phone: "27998209839" },
+            { name: "Lucas de Souza Fernandes", photo: "lucas.png", room: "Gama + Ômega", dob: "05/01", phone: "27995054635" },
+            { name: "Libhya da Silva Souza Gonçalves Victorino", photo: "libhya.png", room: "Gama + Ômega", dob: "12/08", phone: "27999733457" },
+            { name: "Alex Gonçalves Victorino", photo: "alex.png", room: "Gama + Ômega", dob: "20/11", phone: "27999064068" },
+            { name: "Mikaeli Manoel Jacinto Furriel Gonçalves", photo: "mikaeli.png", room: "Gama + Ômega", dob: "19/01", phone: "27999567965" },
+            { name: "Jackson Jadyvysky", photo: "jackson.png", room: "Gama + Ômega", dob: "06/06", phone: "27999575703" },
+            { name: "Luiz Felipe Oliveira dos Santos", photo: "luiz.png", room: "Gama + Ômega", dob: "19/11", phone: "27995262281" },
+            { name: "Diego Pimenta", photo: "diego.png", room: "Gama + Ômega", dob: "21/05", phone: "27992978778" },
+            { name: "Raiara da Conceição Viana Pimenta", photo: "raiara.png", room: "Gama + Ômega", dob: "17/08", phone: "27992896345" },
+            { name: "Brenda Rodrigues de Souza", photo: "brenda.png", room: "Gama + Ômega", dob: "20/07", phone: "27992819832" },
+            { name: "JOICE", photo: "joice.png", room: "Gama + Ômega", dob: "", phone: "27995215321" },
+            { name: "Brunara dos Santos Alves", photo: "brunara.png", room: "Gama + Ômega", dob: "25/04", phone: "27995067124" },
+            { name: "Kauã Guimarães Stein ", photo: "kauan.png", room: "Gama + Ômega", dob: "23/12", phone: "27998391140" }
         ];
 
         let scheduleData = {};
@@ -899,7 +901,74 @@
         }
         initScheduleStructure();
 
+        // ============================================
+        // MIGRAÇÃO ÚNICA: unir as salas Gama e Ômega
+        // Move as escalas e os alunos já salvos no Firebase das chaves
+        // antigas (gama / ômega) para a nova chave unida (gama_omega) e
+        // apaga as antigas. Protegida por uma flag para rodar só uma vez.
+        // ============================================
+        function migrarSalasGamaOmega() {
+            db.ref('config/salaUnidaGamaOmega').once('value').then(flagSnap => {
+                if (flagSnap.val()) return; // Já foi feito antes
+
+                const tarefas = [];
+
+                // 1) Escalas: junta gama + ômega dentro de gama_omega
+                tarefas.push(
+                    db.ref('escalas').once('value').then(snap => {
+                        const escalas = snap.val() || {};
+                        const antigas = [].concat(escalas.gama || [], escalas['ômega'] || [], escalas.omega || []);
+                        if (antigas.length === 0) return;
+                        const unidas = (escalas.gama_omega || []).concat(antigas);
+                        return db.ref('escalas/gama_omega').set(unidas).then(() => {
+                            const rem = [];
+                            if (escalas.gama !== undefined) rem.push(db.ref('escalas/gama').remove());
+                            if (escalas['ômega'] !== undefined) rem.push(db.ref('escalas/ômega').remove());
+                            if (escalas.omega !== undefined) rem.push(db.ref('escalas/omega').remove());
+                            return Promise.all(rem);
+                        });
+                    })
+                );
+
+                // 2) Alunos (dados_extras): junta gama + ômega dentro de gama_omega
+                tarefas.push(
+                    db.ref('dados_extras/alunos').once('value').then(snap => {
+                        const alunos = snap.val() || {};
+                        const merged = Object.assign({}, alunos.gama || {}, alunos['ômega'] || {}, alunos.omega || {});
+                        if (Object.keys(merged).length === 0) return;
+                        return db.ref('dados_extras/alunos/gama_omega').update(merged).then(() => {
+                            const rem = [];
+                            if (alunos.gama !== undefined) rem.push(db.ref('dados_extras/alunos/gama').remove());
+                            if (alunos['ômega'] !== undefined) rem.push(db.ref('dados_extras/alunos/ômega').remove());
+                            if (alunos.omega !== undefined) rem.push(db.ref('dados_extras/alunos/omega').remove());
+                            return Promise.all(rem);
+                        });
+                    })
+                );
+
+                // 3) Professores: quem estava só em Gama ou só em Ômega passa para a sala unida
+                tarefas.push(
+                    db.ref('dados_extras/professores').once('value').then(snap => {
+                        const profs = snap.val() || {};
+                        const rem = [];
+                        Object.keys(profs).forEach(safeName => {
+                            const r = profs[safeName] ? profs[safeName].room : undefined;
+                            if (r === 'Gama' || r === 'Ômega') {
+                                rem.push(db.ref('dados_extras/professores/' + safeName).update({ room: 'Gama + Ômega' }));
+                            }
+                        });
+                        return Promise.all(rem);
+                    })
+                );
+
+                Promise.all(tarefas)
+                    .then(() => db.ref('config/salaUnidaGamaOmega').set(true))
+                    .catch(e => console.error('Erro na migração das salas Gama/Ômega:', e));
+            });
+        }
+
         function startFirebaseListener() {
+    migrarSalasGamaOmega();
     const loadingIndicator = document.getElementById('scheduleGrid');
     if(loadingIndicator) loadingIndicator.innerHTML = '<div style="padding:20px; text-align:center;">⏳ Carregando escalas...</div>';
 
@@ -909,9 +978,13 @@
         allDates = [];
 
         if (data) {
-            Object.keys(data).forEach(roomKey => {
+            Object.keys(data).forEach(rawRoomKey => {
+                // Redireciona escalas antigas (gama / ômega) para a sala unida
+                const roomKey = resolveRoomKey(rawRoomKey);
                 if (scheduleData[roomKey]) {
-                    scheduleData[roomKey].schedules = data[roomKey] || [];
+                    // Concatena para não perder escalas caso ainda existam
+                    // dados salvos nas duas chaves antigas ao mesmo tempo
+                    scheduleData[roomKey].schedules = (scheduleData[roomKey].schedules || []).concat(data[rawRoomKey] || []);
                     scheduleData[roomKey].schedules.forEach(item => {
                         if (!allDates.includes(item.date)) allDates.push(item.date);
                     });
@@ -927,13 +1000,17 @@
 
             // Atualiza, Adiciona ou Remove Alunos
             if(extras.alunos) {
-                Object.keys(extras.alunos).forEach(roomKey => {
+                Object.keys(extras.alunos).forEach(rawRoomKey => {
+                    // Redireciona chaves antigas (gama / ômega) para a sala unida
+                    const roomKey = resolveRoomKey(rawRoomKey);
+                    // Ignora salas que não existem mais no sistema
+                    if(!roomsData[roomKey]) return;
                     if(!kidsData[roomKey]) kidsData[roomKey] = [];
-                    
-                    Object.keys(extras.alunos[roomKey]).forEach(safeName => {
-                        const data = extras.alunos[roomKey][safeName];
+
+                    Object.keys(extras.alunos[rawRoomKey]).forEach(safeName => {
+                        const data = extras.alunos[rawRoomKey][safeName];
                         const kidIndex = kidsData[roomKey].findIndex(k => k.name.replace(/[.#$[\]]/g, '') === safeName);
-                        
+
                         if(kidIndex !== -1) {
                             if (data.deleted) {
                                 // Se foi apagado, remove a criança da lista visual
@@ -945,9 +1022,9 @@
                                 if(data.dob !== undefined) kidToUpdate.dob = data.dob;
                                 if(data.phone !== undefined) kidToUpdate.phone = data.phone;
                                 if(data.guardian !== undefined) kidToUpdate.guardian = data.guardian;
-                                
+
                                 // 👉 ESTA É A LINHA QUE FALTAVA (Atualiza a foto!)
-                                if(data.photo !== undefined) kidToUpdate.photo = data.photo; 
+                                if(data.photo !== undefined) kidToUpdate.photo = data.photo;
                             }
                         } else if (data.isNew && !data.deleted) {
                             // Se não existe na lista, é um aluno novo! Injeta.
@@ -1833,6 +1910,20 @@
             renderTeacherSelectionList(currentSelected, roomsData[roomKey].name); 
         }
 
+        // Verifica se um professor pertence a uma turma, entendendo múltiplas turmas
+        // separadas por vírgula (ex.: "Gama, Ômega"). Assim o professor não some
+        // dos filtros quando está escalado em mais de uma turma.
+        function teacherBelongsToRoom(teacher, roomName) {
+            if (!teacher || !teacher.room || !roomName) return false;
+            const tokens = teacher.room.split(',').map(r => r.trim());
+            if (tokens.includes(roomName.trim())) return true;
+            // Sala unida: aceita quem ainda está marcado com as antigas "Gama" ou "Ômega"
+            if (roomName.trim() === "Gama + Ômega") {
+                return tokens.some(t => t === "Gama" || t === "Ômega");
+            }
+            return false;
+        }
+
         function renderTeacherSelectionList(selectedTeachers = [], filterRoomName = null) {
             const container = document.getElementById('teacherSelectionList'); 
             container.innerHTML = '';
@@ -1847,7 +1938,7 @@
             const sortedTeachers = [...fixedTeachersData].sort((a,b) => a.name.localeCompare(b.name));
             
             sortedTeachers.forEach(t => {
-                if (filterRoomName && t.room !== filterRoomName && !selectedTeachers.includes(t.name)) return;
+                if (filterRoomName && !teacherBelongsToRoom(t, filterRoomName) && !selectedTeachers.includes(t.name)) return;
                 
                 const isChecked = selectedTeachers.includes(t.name) ? 'checked' : '';
                 
@@ -1996,7 +2087,7 @@
             } else {
                 fixedTeachersData.forEach(t => {
                     if (search && !t.name.toLowerCase().includes(search)) return; 
-                    if (selectedAdminTeacherRoom && roomsData[selectedAdminTeacherRoom].name !== t.room) return;
+                    if (selectedAdminTeacherRoom && !teacherBelongsToRoom(t, roomsData[selectedAdminTeacherRoom].name)) return;
                     
                     let phoneInfo = t.phone ? `<p><i class="fas fa-phone-alt" style="color:var(--text-muted);"></i> ${t.phone}</p>` : '';
                     let dobInfo = t.dob ? `<p><i class="fas fa-birthday-cake" style="color:var(--secondary);"></i> Niver: ${t.dob}</p>` : '';
@@ -2073,7 +2164,11 @@
                 const roomsListContainer = document.getElementById('editPersonRoomsList');
                 roomsListContainer.innerHTML = '';
                 Object.keys(roomsData).forEach(rk => {
-                    const isChecked = (currentRooms.includes(rk) || currentRooms.includes(roomsData[rk].name)) ? 'checked' : '';
+                    let isChecked = (currentRooms.includes(rk) || currentRooms.includes(roomsData[rk].name)) ? 'checked' : '';
+                    // Sala unida: pré-marca também quem ainda está com "Gama" ou "Ômega" antigo
+                    if (!isChecked && rk === 'gama_omega' && (currentRooms.includes('Gama') || currentRooms.includes('Ômega'))) {
+                        isChecked = 'checked';
+                    }
                     roomsListContainer.innerHTML += `
                         <label style="display:flex; align-items:center; gap:5px; background:#f3f4f6; padding:5px 10px; border-radius:8px; font-size:0.85rem; cursor:pointer;">
                             <input type="checkbox" class="edit-room-checkbox" value="${rk}" ${isChecked} style="width:auto; padding:0; margin:0;">
@@ -2286,6 +2381,7 @@
                     
                     let roomKey = roomVal.toLowerCase();
                     if(roomKey === 'berçário') roomKey = 'berçario';
+                    if(roomVal === 'Gama + Ômega') roomKey = 'gama_omega';
 
                     payload.guardian = guardian;
                     payload.phone = phone;
