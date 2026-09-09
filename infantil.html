@@ -648,7 +648,7 @@
             <div id="adminStudentRoomFilter" class="" style="margin-bottom: 15px;"><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Filtrar Alunos por Turma:</label><div class="filter-bar" id="room-filters-admin-students"></div></div>
             <div id="adminTeacherRoomFilter" class="hidden" style="margin-bottom: 15px;"><label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Filtrar Professores por Turma:</label><div class="filter-bar" id="room-filters-admin-teachers"></div></div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;"><input type="text" id="adminSearch" placeholder="🔍 Buscar por nome..." oninput="filterAdminList()" style="margin-bottom:0;"><button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="toggleNewForm()"><i class="fas fa-plus"></i> Novo</button></div>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;"><input type="text" id="adminSearch" placeholder="🔍 Buscar por nome..." oninput="filterAdminList()" style="margin-bottom:0; flex: 1 1 180px;"><button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="toggleNewForm()"><i class="fas fa-plus"></i> Novo</button><button class="btn btn-success" style="width: auto; padding: 10px 20px;" onclick="exportPessoasCSV()"><i class="fas fa-file-excel"></i> Exportar</button></div>
             <div id="adminFormContainer" class="card-section hidden" style="border: 2px dashed var(--primary); background: #fdfbff;">
                 <h3 style="margin-top:0;">Novo Cadastro</h3>
                 <div class="form-group"><label>Nome Completo</label><input type="text" id="regName"></div>
@@ -2135,6 +2135,63 @@
             }
         }
 
+
+        // ==========================================
+        // EXPORTAR RELATÓRIO DE PESSOAS (CSV)
+        // Exporta exatamente a aba que está aberta (Alunos ou Professores),
+        // respeitando o filtro de turma e a busca por nome que estão na tela.
+        // ==========================================
+        function csvSafe(value) {
+            return String(value == null ? '' : value).replace(/[;\r\n]/g, ' ').trim();
+        }
+
+        function exportPessoasCSV() {
+            const search = document.getElementById('adminSearch').value.toLowerCase();
+            const hoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+            let csvContent = '';
+            let fileName = '';
+            let total = 0;
+
+            if (currentAdminTab === 'professores') {
+                csvContent = "\uFEFFNOME;TELEFONE;TURMA;ANIVERSARIO\n";
+                const lista = fixedTeachersData.filter(t => {
+                    if (search && !t.name.toLowerCase().includes(search)) return false;
+                    if (selectedAdminTeacherRoom && !teacherBelongsToRoom(t, professorRoomsData[selectedAdminTeacherRoom].name)) return false;
+                    return true;
+                }).sort((a, b) => a.name.localeCompare(b.name));
+
+                lista.forEach(t => {
+                    csvContent += `${csvSafe(t.name)};${csvSafe(t.phone)};${csvSafe(t.room || 'Geral')};${csvSafe(t.dob)}\n`;
+                    total++;
+                });
+                fileName = `Relatorio_Professores_${hoje}.csv`;
+            } else {
+                csvContent = "\uFEFFNOME;TURMA;RESPONSAVEL;TELEFONE;NASCIMENTO;IDADE\n";
+                Object.keys(kidsData).forEach(rk => {
+                    if (selectedAdminStudentRoom && rk !== selectedAdminStudentRoom) return;
+
+                    const lista = kidsData[rk].filter(k => !search || k.name.toLowerCase().includes(search))
+                                             .sort((a, b) => a.name.localeCompare(b.name));
+
+                    lista.forEach(k => {
+                        csvContent += `${csvSafe(k.name)};${csvSafe(roomsData[rk].name)};${csvSafe(k.guardian)};${csvSafe(k.phone)};${csvSafe(k.dob)};${csvSafe(calculateAge(k.dob))}\n`;
+                        total++;
+                    });
+                });
+                fileName = `Relatorio_Alunos_${hoje}.csv`;
+            }
+
+            if (total === 0) { showToast('Nenhum registro para exportar com esses filtros.', 'error'); return; }
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast(`${total} registro(s) exportado(s)!`);
+        }
 
         // ==========================================
         // FUNÇÕES DE EDIÇÃO E EXCLUSÃO ATUALIZADAS
