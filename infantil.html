@@ -2318,6 +2318,25 @@
                     // Remover o aluno de salas desmarcadas ou antigas
                     for (const oldRoom of originalRooms) {
                         if (!selectedRooms.includes(oldRoom) || safeNewName !== safeOriginalName) {
+                            // Leva a pontuação da Imersão junto: o ID de pontos é "sala_nome",
+                            // então mudar sala/nome sem copiar fazia a criança "zerar" e
+                            // sumir do ranking com os pontos antigos presos no ID velho.
+                            const oldScoreId = `${oldRoom}_${safeOriginalName}`;
+                            const oldSnap = await db.ref(`imersao_biblica_scores/${oldScoreId}`).once('value');
+                            if (oldSnap.exists()) {
+                                for (const newRoom of selectedRooms) {
+                                    const newScoreId = `${newRoom}_${safeNewName}`;
+                                    if (newScoreId === oldScoreId) continue;
+                                    const newRef = db.ref(`imersao_biblica_scores/${newScoreId}`);
+                                    const newSnap = await newRef.once('value');
+                                    const newTotal = newSnap.exists() ? (newSnap.val().total || 0) : 0;
+                                    const oldTotal = oldSnap.val().total || 0;
+                                    // Só copia se o destino não tem pontos ou tem menos que o antigo
+                                    if (!newSnap.exists() || newTotal < oldTotal) {
+                                        await newRef.set(oldSnap.val());
+                                    }
+                                }
+                            }
                             await db.ref(`dados_extras/alunos/${oldRoom}/${safeOriginalName}`).update({ deleted: true });
                         }
                     }
